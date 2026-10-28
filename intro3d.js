@@ -1,0 +1,675 @@
+/* ===== PardoHT · Intro 3D ===== */
+// Un único vuelo de cámara, sin cortes, controlado por el scroll:
+// "Faith in me" → la gorra sale de la oscuridad → la rodea → entra por el snapback,
+// la recorre por dentro, sale por debajo → visera → elige color (arrastrar para girar).
+
+const intro = document.querySelector("#intro");
+const pegajoso = document.querySelector("#introPegajoso");
+const lienzo = document.querySelector("#lienzo3d");
+const frase = document.querySelector("#introFrase");
+const foco = document.querySelector("#introFoco");
+const final = document.querySelector("#introFinal");
+const desliza = document.querySelector("#introDesliza");
+const barra = document.querySelector("#introBarra");
+const svgLineas = document.querySelector("#introLineas");
+
+// Ruta de la cámara: [progreso, posición de la cámara, punto al que mira] (coordenadas de la escena)
+const RUTA = [
+  [0.000, [ 0.0,  2.2, 17.0], [0,  0.00,  0.00]],
+  [0.060, [-1.0,  1.8, 14.0], [0,  0.00,  0.00]],
+  [0.240, [ 3.2,  1.4,  4.6], [0,  0.00,  0.00]],  // llega al centro
+  [0.310, [ 2.4,  1.0,  4.4], [0,  0.05,  0.00]],
+  [0.400, [ 0.0,  0.55, 4.4], [0,  0.10,  0.00]],  // 01 frontal
+  [0.460, [-0.4,  0.6,  4.4], [0,  0.10,  0.00]],
+  [0.540, [-4.6,  1.6,  0.2], [0,  0.10, -0.35]],  // 02 rejilla
+  [0.590, [-4.4,  1.3, -1.4], [0,  0.05, -0.40]],
+  [0.650, [-0.5,  0.15,-4.4], [0, -0.10, -1.40]],  // 03 snapback
+  [0.690, [ 0.0,  0.0, -3.4], [0, -0.10, -1.40]],
+  [0.740, [ 0.0, -0.1, -1.6], [0, -0.05,  0.00]],  // entra por la apertura
+  [0.785, [ 0.0, -0.30,-0.45], [0,  0.60, -0.10]],  // 04 por dentro: mira arriba, a las cintas "faith in me"
+  [0.810, [ 0.0, -0.28,-0.40], [0,  0.60, -0.05]],
+  [0.840, [ 0.0, -0.75,-0.1], [0, -0.20,  0.60]],  // baja y sale por debajo
+  [0.860, [ 2.6, -0.2,  0.8], [0, -0.20,  0.60]],  // se abre hacia un lado
+  [0.885, [ 2.8,  1.2,  3.4], [0.2, -0.30, 0.90]], // 04 visera
+  [0.920, [ 2.2,  1.4,  3.8], [0.2, -0.30, 0.90]],
+  [0.970, [ 0.0,  0.8,  7.4], [0, -0.70,  0.00]],  // elige la tuya
+  [1.000, [ 0.0,  0.8,  7.4], [0, -0.70,  0.00]],
+];
+
+const suave = (t) => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
+
+function progreso() {
+  const r = intro.getBoundingClientRect();
+  const arriba = parseFloat(getComputedStyle(pegajoso).top) || 0;
+  const recorrido = r.height - pegajoso.offsetHeight;
+  return Math.min(1, Math.max(0, (arriba - r.top) / recorrido));
+}
+
+function modoSimple() {
+  intro.classList.add("intro--simple");
+  document.querySelector("#introSimple").innerHTML = gorraSVG(porId(colorActivo));
+}
+
+let THREE, RoomEnvironment;
+try {
+  THREE = await import("three");
+  ({ RoomEnvironment } = await import("three/addons/environments/RoomEnvironment.js"));
+  await iniciar();
+} catch (e) {
+  console.warn("Intro 3D no disponible:", e);
+  modoSimple();
+}
+
+async function iniciar() {
+  const renderer = new THREE.WebGLRenderer({ canvas: lienzo, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.95;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const escena = new THREE.Scene();
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  escena.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+  const camara = new THREE.PerspectiveCamera(30, 1, 0.05, 60);
+
+  const luz = new THREE.DirectionalLight(0xffffff, 2.2);
+  luz.position.set(-3, 4, 5);
+  luz.castShadow = true;
+  luz.shadow.mapSize.set(2048, 2048);
+  Object.assign(luz.shadow.camera, { left: -2.5, right: 2.5, top: 2.5, bottom: -2.5, near: 0.5, far: 16 });
+  luz.shadow.bias = -0.0004;
+  luz.shadow.normalBias = 0.03;
+  luz.shadow.radius = 5;
+  const contraluz = new THREE.DirectionalLight(0xf3d2e2, 2.2);
+  contraluz.position.set(3, 2, -4);
+  // Linterna: sigue al ratón y saca el brillo del terciopelo (y alumbra el interior)
+  const linterna = new THREE.PointLight(0xffe3f0, 0, 7, 1.6);
+  // Luz interior: solo se enciende cuando la cámara vuela por dentro de la gorra
+  const luzInterior = new THREE.PointLight(0xffd6e8, 0, 2.5, 1.5);
+  luzInterior.position.set(0, 0.0, -0.3);
+  escena.add(luz, contraluz, linterna, luzInterior, new THREE.HemisphereLight(0xffffff, 0x4a2a3a, 0.7));
+
+  /* ---------- Texturas dibujadas en canvas ---------- */
+  const textura = (w, h, dibuja) => {
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    dibuja(c.getContext("2d"), w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  };
+
+  // Grano del terciopelo
+  const grano = (x, w, h) => {
+    const img = x.getImageData(0, 0, w, h);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const n = 0.88 + Math.random() * 0.12;
+      img.data[i] *= n; img.data[i + 1] *= n; img.data[i + 2] *= n;
+    }
+    x.putImageData(img, 0, 0);
+  };
+
+  const linea = (x, x1, y1, x2, y2) => { x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke(); };
+
+  // Trucker: frontal alto de pelo (150°) y el resto de rejilla, como la gorra real
+  const FRENTE = (150 * Math.PI) / 180;
+  const ALTO = 1.02;
+  // Deforma la media esfera: laterales más rectos, frontal adelantado y casi vertical, trasera algo más baja.
+  // La base (y = 0) y la punta no se mueven, así visera, badana y cierre siguen encajando.
+  const forma = (x, y, z) => {
+    const delante = Math.max(0, z), medio = y * (1 - y);
+    return [
+      x * (1 + 0.12 * medio),
+      Math.pow(Math.max(0, y), 0.8) * (1 + 0.1 * z),
+      z * (1 + 0.4 * delante * medio),
+    ];
+  };
+  const casco = (r, inicio, largo) => {
+    const g = new THREE.SphereGeometry(r, 96, 48, inicio, largo, 0, Math.PI / 2);
+    const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const [x, y, z] = forma(pos.getX(i) / r, pos.getY(i) / r, pos.getZ(i) / r);
+      pos.setXYZ(i, x * r, y * r, z * r);
+    }
+    g.computeVertexNormals();
+    return g;
+  };
+  // Punto de la copa (en coordenadas de la gorra) a partir de la vuelta y la altura, en grados
+  const enCopa = (phi, theta, r = 1) => {
+    const f = (phi * Math.PI) / 180, t = (theta * Math.PI) / 180;
+    const [x, y, z] = forma(-Math.cos(f) * Math.sin(t), Math.cos(t), Math.sin(f) * Math.sin(t));
+    return new THREE.Vector3(x * r, y * r * ALTO, z * r * 1.08);
+  };
+  const tramoFrente = [Math.PI / 2 - FRENTE / 2, FRENTE];
+  const tramoRejilla = [Math.PI / 2 + FRENTE / 2, Math.PI * 2 - FRENTE];
+
+  // Fuentes del bordado "Pardo" y de la cinta interior
+  if (document.fonts) {
+    await Promise.all([
+      document.fonts.load("140px Pacifico"),
+      document.fonts.load('600 24px "Dancing Script"'),
+    ]).catch(() => {});
+  }
+
+  // Frontal (base bajo el pelo): costuras de los bordes
+  const mapaFrente = textura(1024, 512, (x, w, h) => {
+    x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
+    x.strokeStyle = "rgba(0,0,0,.4)"; x.lineWidth = 4;
+    linea(x, 3, 0, 3, h); linea(x, w - 3, 0, w - 3, h);
+    grano(x, w, h);
+  });
+  mapaFrente.colorSpace = THREE.SRGBColorSpace;
+
+  // Pelo: cada píxel es una hebra de altura aleatoria; cada capa deja ver solo las más largas
+  // Ruido suave y repetible para agrupar hebras en mechones y variar el tono
+  const ruidoSuave = (n) => {
+    const g = Array.from({ length: n * n }, () => Math.random());
+    const at = (i, j) => g[((j % n + n) % n) * n + ((i % n + n) % n)];
+    return (u, v) => {
+      const i = Math.floor(u), j = Math.floor(v), fu = u - i, fv = v - j;
+      const a = at(i, j) + (at(i + 1, j) - at(i, j)) * fu;
+      const b = at(i, j + 1) + (at(i + 1, j + 1) - at(i, j + 1)) * fu;
+      return a + (b - a) * fv;
+    };
+  };
+  const mechones = ruidoSuave(48), mechonesFinos = ruidoSuave(160);
+  const texPelo = textura(1024, 1024, (x, w, h) => {
+    const img = x.createImageData(w, h);
+    for (let j = 0, k = 0; j < h; j++) for (let i = 0; i < w; i++, k += 4) {
+      const grupo = 0.45 + 0.35 * mechones((i / w) * 48, (j / h) * 48) + 0.2 * mechonesFinos((i / w) * 160, (j / h) * 160);
+      const v = Math.min(255, Math.pow(Math.random(), 1.3) * grupo * 300);
+      img.data[k] = img.data[k + 1] = img.data[k + 2] = v; img.data[k + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+  });
+  texPelo.wrapS = texPelo.wrapT = THREE.RepeatWrapping;
+  texPelo.repeat.set(3, 1.5);
+
+  // Tono del pelo: zonas algo más claras y oscuras, peinadas hacia abajo
+  const vetas = ruidoSuave(24);
+  const mapaPelo = textura(512, 512, (x, w, h) => {
+    const img = x.createImageData(w, h);
+    for (let j = 0, k = 0; j < h; j++) for (let i = 0; i < w; i++, k += 4) {
+      const v = 205 + 50 * vetas((i / w) * 24, (j / h) * 6);
+      img.data[k] = img.data[k + 1] = img.data[k + 2] = v; img.data[k + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+  });
+  mapaPelo.colorSpace = THREE.SRGBColorSpace;
+  mapaPelo.wrapS = mapaPelo.wrapT = THREE.RepeatWrapping;
+
+  // Rejilla: agujeros en tresbolillo, cintas en las costuras y apertura del snapback.
+  // El lienzo cubre 210° de vuelta (ancho) por 90° de altura, por eso los agujeros se dibujan achatados.
+  const COSTURAS = [0, 60 / 210, 0.5, 150 / 210, 1];
+  const ARCO = { cx: 0.5, an: 0.085, alto: 0.32 };
+  const dibujarRejilla = (x, w, h, conAgujeros) => {
+    x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
+    const estira = 1.57, paso = 15, rx = 5;
+    x.fillStyle = conAgujeros ? "#000" : "rgba(0,0,0,.35)";
+    for (let fila = 0, y = 34; y < h - 30; fila++, y += paso / estira) {
+      for (let cx = (fila % 2) * paso / 2; cx < w; cx += paso) {
+        x.beginPath(); x.ellipse(cx, y, rx, rx / estira, 0, 0, Math.PI * 2); x.fill();
+      }
+    }
+    // Cintas sólidas: costuras, base y borde superior
+    x.fillStyle = conAgujeros ? "#fff" : "#f4f4f4";
+    for (const u of COSTURAS) x.fillRect(u * w - 9, 0, 18, h);
+    x.fillRect(0, h - 26, w, 26);
+    x.fillRect(0, 0, w, 26);
+    // Apertura del snapback con ribete
+    const cx = ARCO.cx * w, an = ARCO.an * w, alto = ARCO.alto * h;
+    const arco = () => {
+      x.beginPath();
+      x.moveTo(cx - an, h);
+      x.lineTo(cx - an, h - alto + an * 0.6);
+      x.quadraticCurveTo(cx - an, h - alto, cx, h - alto);
+      x.quadraticCurveTo(cx + an, h - alto, cx + an, h - alto + an * 0.6);
+      x.lineTo(cx + an, h);
+    };
+    x.lineWidth = 34; x.strokeStyle = conAgujeros ? "#fff" : "#f4f4f4"; arco(); x.stroke();
+    if (conAgujeros) { x.fillStyle = "#000"; arco(); x.fill(); }
+    if (!conAgujeros) {
+      x.strokeStyle = "rgba(0,0,0,.3)"; x.lineWidth = 1.5; x.setLineDash([6, 5]);
+      for (const u of COSTURAS) { linea(x, u * w - 6, 26, u * w - 6, h); linea(x, u * w + 6, 26, u * w + 6, h); }
+      linea(x, 0, h - 16, w, h - 16);
+      x.setLineDash([]);
+      grano(x, w, h);
+    }
+  };
+  const mapaRejilla = textura(2048, 512, (x, w, h) => dibujarRejilla(x, w, h, false));
+  mapaRejilla.colorSpace = THREE.SRGBColorSpace;
+  const alfaRejilla = textura(2048, 512, (x, w, h) => dibujarRejilla(x, w, h, true));
+
+  // "Pardo" bordado en la rejilla del lateral izquierdo
+  const texPardo = textura(2048, 512, (x, w, h) => {
+    x.translate(0.86 * w, 0.72 * h);
+    x.scale(1, 1 / 1.57);
+    x.font = '140px Pacifico, "Brush Script MT", cursive';
+    x.textAlign = "center"; x.textBaseline = "middle";
+    x.lineWidth = 12; x.strokeStyle = "rgba(0,0,0,.3)"; x.strokeText("Pardo", 0, 0);
+    x.fillStyle = "#fff"; x.fillText("Pardo", 0, 0);
+  });
+  texPardo.colorSpace = THREE.SRGBColorSpace;
+
+  // Cinta interior: "faith in me" impreso en cada costura (vista desde dentro, por eso en espejo)
+  const texCinta = (fondo, tinta) => {
+    const t = textura(2048, 1024, (x, w, h) => {
+      const ancho = 40, estira = 2.16;
+      for (const grados of [30, 90, 150, 210, 270, 330]) {
+        const cx = (grados / 360) * w;
+        x.fillStyle = fondo; x.fillRect(cx - ancho / 2, 0, ancho, h);
+        x.save();
+        x.translate(cx, 0); x.rotate(Math.PI / 2); x.scale(estira, -1);
+        x.fillStyle = tinta;
+        x.font = '600 24px "Dancing Script", cursive';
+        x.textAlign = "left"; x.textBaseline = "middle";
+        for (let y = 40; y < h; y += 280) x.fillText("faith in me", y / estira, 0);
+        x.restore();
+      }
+    });
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  };
+  const cintas = Object.fromEntries(PRODUCTOS.map((p) => [p.id, texCinta(p.cinta, p.tinta)]));
+
+  // Logo bordado centrado en el frontal (se tiñe en el tono de la gorra)
+  const cargar = (src) => new Promise((ok, mal) => {
+    const i = new Image(); i.onload = () => ok(i); i.onerror = mal; i.src = src;
+  });
+  const imgLogo = await cargar("img/logo-blanco.png");
+  const texLogo = textura(1024, 512, (x) => x.drawImage(imgLogo, 512 - 170, 205, 340, 200));
+  texLogo.colorSpace = THREE.SRGBColorSpace;
+
+  /* ---------- Materiales ---------- */
+  const blanco = new THREE.Color("#ffffff");
+  const tela = new THREE.MeshStandardMaterial({ map: mapaFrente, roughness: 1 });
+  const forro = new THREE.MeshStandardMaterial({ roughness: 1, side: THREE.BackSide });
+  const rejilla = new THREE.MeshStandardMaterial({
+    map: mapaRejilla, alphaMap: alfaRejilla, alphaTest: 0.5,
+    roughness: 0.75, side: THREE.DoubleSide,
+  });
+  const telaVisera = new THREE.MeshStandardMaterial({ roughness: 1, side: THREE.DoubleSide });
+  const plastico = new THREE.MeshStandardMaterial({ roughness: 0.35 });
+  const relieve = Array.from({ length: 4 }, (_, k) => new THREE.MeshStandardMaterial({
+    map: texLogo, alphaTest: 0.35, bumpMap: texLogo, bumpScale: 2, envMapIntensity: 0.4,
+    roughness: 0.75, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2 - k,
+  }));
+  const bordadoPardo = new THREE.MeshStandardMaterial({
+    map: texPardo, transparent: true, depthWrite: false,
+    roughness: 0.45, metalness: 0.15, polygonOffset: true, polygonOffsetFactor: -2,
+  });
+  const cinta = new THREE.MeshStandardMaterial({ transparent: true, alphaTest: 0.5, side: THREE.BackSide, roughness: 0.7 });
+  const badana = new THREE.MeshStandardMaterial({ roughness: 1, side: THREE.BackSide });
+
+  // Capas de pelo: de la raíz (oscura) a las puntas (más claras)
+  const CAPAS = 22, LARGO_PELO = 0.12;
+  const pelos = Array.from({ length: CAPAS }, (_, k) => {
+    const f = (k + 1) / CAPAS;
+    return {
+      f,
+      m: new THREE.MeshPhysicalMaterial({
+        map: mapaPelo, alphaMap: texPelo, alphaTest: 0.05 + 0.88 * f,
+        roughness: 1, sheen: 0.8 * f, sheenRoughness: 0.5, envMapIntensity: 0.35,
+      }),
+    };
+  });
+
+  function pintar(p) {
+    const pelo = new THREE.Color(p.hex);
+    tela.color.copy(pelo).multiplyScalar(0.45);
+    telaVisera.color.copy(pelo).multiplyScalar(0.45);
+    for (const { f, m } of pelos) {
+      m.color.copy(pelo).multiplyScalar(0.38 + 0.72 * f);  // raíz oscura, puntas con luz
+      m.sheenColor.copy(pelo).lerp(blanco, 0.35);
+    }
+    // Bordado tono sobre tono: apenas más claro que el pelo, como en la gorra real
+    for (const [k, m] of relieve.entries()) m.color.copy(pelo).multiplyScalar(0.55 + 0.07 * k).lerp(blanco, p.id === "negro" ? 0.03 * k : 0.02 * k);
+    rejilla.color.set(p.rejilla);
+    plastico.color.set(p.rejilla).multiplyScalar(0.9);
+    bordadoPardo.color.set(p.hilo);
+    forro.color.set(p.forro);
+    badana.color.set(p.forro).multiplyScalar(0.85);
+    cinta.map = cintas[p.id];
+    cinta.needsUpdate = true;
+  }
+
+  /* ---------- Modelo de la gorra ---------- */
+  const gorra = new THREE.Group();
+
+  const sombra = (m) => { m.castShadow = true; m.receiveShadow = true; return m; };
+  const copa = new THREE.Group();
+  copa.scale.set(1, ALTO, 1.08);
+  const geoFrente = casco(1, ...tramoFrente);
+  copa.add(
+    sombra(new THREE.Mesh(geoFrente, tela)),
+    new THREE.Mesh(geoFrente, forro),
+    sombra(new THREE.Mesh(casco(1, ...tramoRejilla), rejilla)),
+    new THREE.Mesh(casco(1.006, ...tramoRejilla), bordadoPardo),
+    new THREE.Mesh(casco(0.994, 0, Math.PI * 2), cinta),
+  );
+  relieve.forEach((m, k) => copa.add(new THREE.Mesh(casco(1 + LARGO_PELO * 0.9 + 0.006 * k, ...tramoFrente), m)));
+  for (const { f, m } of pelos) {
+    const capa = new THREE.Mesh(casco(1 + LARGO_PELO * f, ...tramoFrente), m);
+    capa.position.y = -0.025 * f * f;  // el pelo cae, peinado hacia abajo
+    capa.receiveShadow = true;
+    copa.add(capa);
+  }
+  for (let k = 0; k < 8; k++) {
+    const boton = new THREE.Mesh(new THREE.SphereGeometry(0.07 + 0.008 * k, 24, 12), pelos[Math.min(CAPAS - 1, k * 3)].m);
+    boton.position.y = 1.02;
+    boton.scale.y = 0.7;
+    copa.add(boton);
+  }
+  gorra.add(copa);
+
+  // Badana: la cinta interior del contorno
+  const geoBadana = new THREE.CylinderGeometry(0.985, 0.985, 0.11, 96, 1, true);
+  const anillo = new THREE.Mesh(geoBadana, badana);
+  anillo.position.y = 0.055;
+  anillo.scale.z = 1.08;
+  gorra.add(anillo);
+
+  // Visera curva: superficie superior, inferior y canto
+  const puntoVisera = (s, t, y0) => {
+    const a = s * 1.25;
+    const largo = 0.86 * Math.pow(Math.max(0, Math.cos(a * 1.24)), 0.65);
+    const x = Math.sin(a) * (1 + largo * t * 0.32);
+    const z = Math.cos(a) * 1.08 + largo * t;
+    // La caída es proporcional a lo que sobresale: en los extremos (casi sin visera) no baja
+    return [x, y0 - (0.12 + 0.36 * x * x) * t * (largo / 0.86), z];
+  };
+  function geometriaVisera() {
+    const S = 72, T = 18, grosor = 0.045, punto = puntoVisera;
+    const pos = [], uv = [], idx = [];
+    const superficie = (y0) => {
+      const base = pos.length / 3;
+      for (let j = 0; j <= T; j++) for (let i = 0; i <= S; i++) {
+        pos.push(...punto((i / S) * 2 - 1, j / T, y0));
+        uv.push(i / S, j / T);
+      }
+      for (let j = 0; j < T; j++) for (let i = 0; i < S; i++) {
+        const a = base + j * (S + 1) + i, b = a + 1, c = a + S + 1, d = c + 1;
+        idx.push(a, c, b, b, c, d);
+      }
+      return base;
+    };
+    const arriba = superficie(0), abajo = superficie(-grosor);
+    for (let i = 0; i < S; i++) {
+      const a = arriba + T * (S + 1) + i, c = abajo + T * (S + 1) + i;
+      idx.push(a, a + 1, c, a + 1, c + 1, c);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    return g;
+  }
+  const geoVisera = geometriaVisera();
+  gorra.add(sombra(new THREE.Mesh(geoVisera, telaVisera)));
+  for (const { f, m } of pelos) {
+    const capa = new THREE.Mesh(geoVisera, m);
+    capa.position.y = LARGO_PELO * 0.75 * f;
+    capa.receiveShadow = true;
+    gorra.add(capa);
+  }
+
+  // Snapback: tira de plástico bajo la apertura con su fila de botones
+  const arcoTira = 0.62;
+  const geoTira = new THREE.TorusGeometry(1.012, 0.026, 8, 40, arcoTira);
+  geoTira.rotateX(Math.PI / 2);
+  geoTira.rotateY(arcoTira / 2 + Math.PI / 2);
+  const tira = new THREE.Mesh(geoTira, plastico);
+  tira.position.y = 0.055;
+  tira.scale.set(1, 2, 1.08);
+  gorra.add(sombra(tira));
+  const geoBoton = new THREE.CylinderGeometry(0.018, 0.018, 0.03, 16);
+  geoBoton.rotateX(Math.PI / 2);
+  for (let k = 0; k < 6; k++) {
+    const a = -0.22 + k * 0.088;
+    const soporte = new THREE.Group();
+    soporte.rotation.y = -a;
+    const b = new THREE.Mesh(geoBoton, plastico);
+    b.position.set(0, 0.055, -1.1);
+    soporte.add(b);
+    gorra.add(soporte);
+  }
+
+  // Jerarquía: flotación → inclinación → giro → gorra centrada
+  gorra.position.set(0, -0.42, -0.35);
+  const giro = new THREE.Group(); giro.add(gorra);
+  const inclinacion = new THREE.Group(); inclinacion.add(giro);
+  const pivote = new THREE.Group(); pivote.add(inclinacion);
+  escena.add(pivote);
+
+  /* ---------- Puntos de anclaje de las notas (coordenadas de la gorra) ---------- */
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const anclas = {
+    logo:    { pos: enCopa(90, 52, 1 + LARGO_PELO), normal: V(0, 0.5, 0.87).normalize() },
+    rejilla: { pos: enCopa(-12, 64),        normal: V(-0.85, 0.5, 0.15).normalize() },
+    cierre:  { pos: V(0, 0.055, -1.13),   normal: V(0, 0, -1) },
+    dentro:  { pos: enCopa(90, 40, 0.99),   normal: V(0, -0.7, -0.7).normalize() },
+    visera:  { pos: V(...puntoVisera(0.25, 0.75, LARGO_PELO * 0.75)), normal: V(0, 1, 0.15).normalize() },
+  };
+
+  const NS = "http://www.w3.org/2000/svg";
+  const notas = [...document.querySelectorAll(".nota")].map((el) => {
+    const g = document.createElementNS(NS, "g");
+    g.innerHTML = `<path/><circle class="onda" r="13"/><circle class="punto" r="4.5"/>`;
+    svgLineas.appendChild(g);
+    return {
+      el, g, path: g.querySelector("path"), circulos: g.querySelectorAll("circle"),
+      ancla: anclas[el.dataset.ancla], desde: +el.dataset.desde, hasta: +el.dataset.hasta,
+    };
+  });
+
+  const enMundo = new THREE.Vector3(), normalMundo = new THREE.Vector3(), haciaCamara = new THREE.Vector3();
+  const giroMundo = new THREE.Quaternion();
+
+  function pintarNotas(p, w, h) {
+    gorra.getWorldQuaternion(giroMundo);
+    for (const n of notas) {
+      enMundo.copy(n.ancla.pos);
+      gorra.localToWorld(enMundo);
+      normalMundo.copy(n.ancla.normal).applyQuaternion(giroMundo);
+      haciaCamara.copy(camara.position).sub(enMundo).normalize();
+      const deCara = suave((normalMundo.dot(haciaCamara) - 0.05) / 0.25);
+      const o = Math.min(suave((p - n.desde) / 0.03), 1 - suave((p - n.hasta + 0.03) / 0.03)) * deCara;
+
+      n.el.style.opacity = o;
+      n.g.style.opacity = o;
+      if (o < 0.01) continue;
+
+      const v = enMundo.clone().project(camara);
+      const sx = (v.x + 1) / 2 * w, sy = (1 - v.y) / 2 * h;
+      let d, lx, ly, largo;
+
+      if (movil) {
+        // Nota abajo, línea vertical desde el punto
+        n.el.style.width = `${w - 32}px`;
+        lx = 16;
+        ly = h - 30 - n.el.offsetHeight;
+        d = `M${sx} ${sy} L${sx} ${ly - 14}`;
+        largo = Math.abs(ly - 14 - sy);
+      } else {
+        // Nota en la columna lateral del lado más cercano, fuera de la gorra
+        const lado = sx >= w / 2 ? 1 : -1;
+        const ancho = n.el.offsetWidth, margen = Math.max(24, w * 0.05);
+        n.el.classList.toggle("derecha", lado < 0);
+        lx = lado > 0 ? w - margen - ancho : margen;
+        ly = Math.min(h - 170, Math.max(24, sy - 90));
+        const lineaY = ly + 30, codoX = sx + lado * 40;
+        const finX = lado > 0 ? lx - 18 : lx + ancho + 18;
+        d = `M${sx} ${sy} L${codoX} ${lineaY} L${finX} ${lineaY}`;
+        largo = Math.hypot(40, lineaY - sy) + Math.abs(finX - codoX);
+      }
+
+      n.path.setAttribute("d", d);
+      n.path.style.strokeDasharray = largo;
+      n.path.style.strokeDashoffset = largo * (1 - o);
+      for (const c of n.circulos) { c.setAttribute("cx", sx); c.setAttribute("cy", sy); }
+      n.el.style.transform = `translate(${lx}px, ${ly + (1 - o) * 14}px)`;
+    }
+  }
+
+  /* ---------- Polvo flotante: da profundidad al vuelo ---------- */
+  const chispa = textura(64, 64, (x) => {
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, "rgba(255,255,255,1)");
+    g.addColorStop(0.4, "rgba(255,255,255,.35)");
+    g.addColorStop(1, "rgba(255,255,255,0)");
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  });
+  const motas = [];
+  while (motas.length < 650 * 3) {
+    const x = (Math.random() - 0.5) * 14, y = Math.random() * 6.5 - 2.8, z = (Math.random() - 0.5) * 14;
+    if (Math.hypot(x, y * 1.4, z + 0.35) < 1.8) continue;  // nada dentro ni pegado a la gorra
+    motas.push(x, y, z);
+  }
+  const geoPolvo = new THREE.BufferGeometry();
+  geoPolvo.setAttribute("position", new THREE.Float32BufferAttribute(motas, 3));
+  const polvo = new THREE.Points(geoPolvo, new THREE.PointsMaterial({
+    map: chispa, color: 0xf6c9dd, size: 0.06, sizeAttenuation: true,
+    transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  escena.add(polvo);
+
+  /* ---------- Tamaño ---------- */
+  let movil = false;
+  function ajustar() {
+    const w = lienzo.clientWidth, h = lienzo.clientHeight;
+    renderer.setSize(w, h, false);
+    camara.aspect = w / h;
+    camara.updateProjectionMatrix();
+    movil = w / h < 0.8;
+  }
+  addEventListener("resize", ajustar);
+
+  pintar(porId(colorActivo));
+  ajustar();
+
+  /* ---------- Interacción ---------- */
+  const raton = { x: 0, y: 0 };
+  addEventListener("pointermove", (e) => {
+    raton.x = (e.clientX / innerWidth) * 2 - 1;
+    raton.y = (e.clientY / innerHeight) * 2 - 1;
+  });
+
+  // Arrastrar para girar la gorra, con inercia
+  let girado = 0, velGiro = 0, arrastrando = false, ultimoX = 0;
+  pegajoso.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("a, button")) return;
+    arrastrando = true; ultimoX = e.clientX;
+    lienzo.classList.add("arrastrando");
+  });
+  addEventListener("pointermove", (e) => {
+    if (!arrastrando) return;
+    velGiro = (e.clientX - ultimoX) * 0.009;
+    girado += velGiro;
+    ultimoX = e.clientX;
+  });
+  const soltar = () => { arrastrando = false; lienzo.classList.remove("arrastrando"); };
+  addEventListener("pointerup", soltar);
+  addEventListener("pointercancel", soltar);
+
+  // Al cambiar de color, la gorra da un giro
+  addEventListener("colorpardo", (e) => { pintar(e.detail); velGiro += 0.32; });
+
+  let visible = true;
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(intro);
+
+  /* ---------- Vuelo ---------- */
+  const V3 = (a) => new THREE.Vector3(...a);
+  const curvaCamara = new THREE.CatmullRomCurve3(RUTA.map((k) => V3(k[1])), false, "centripetal");
+  const curvaMira = new THREE.CatmullRomCurve3(RUTA.map((k) => V3(k[2])), false, "centripetal");
+
+  function enRuta(p) {
+    let i = 0;
+    while (i < RUTA.length - 2 && p > RUTA[i + 1][0]) i++;
+    const f = suave((p - RUTA[i][0]) / (RUTA[i + 1][0] - RUTA[i][0]));
+    return (i + f) / (RUTA.length - 1);
+  }
+
+  const posCam = curvaCamara.getPoint(0), mira = curvaMira.getPoint(0);
+  const objCam = new THREE.Vector3(), objMira = new THREE.Vector3(), tmp = new THREE.Vector3();
+  const reloj = new THREE.Clock();
+  let pAnterior = 0, inclina = 0;
+
+  function bucle() {
+    requestAnimationFrame(bucle);
+    if (!visible) return;
+    const p = progreso();
+    const t = reloj.getElapsedTime();
+
+    // Cámara sobre la ruta, suavizada
+    const u = enRuta(p);
+    curvaCamara.getPoint(u, objCam);
+    curvaMira.getPoint(u, objMira);
+    const lejos = suave((objCam.distanceTo(objMira) - 1.6) / 1.5);  // 0 dentro o pegado, 1 fuera
+    if (movil) {
+      tmp.subVectors(objCam, objMira).multiplyScalar(1 + 0.6 * lejos);
+      objMira.y -= 0.4 * lejos;
+      objCam.copy(objMira).add(tmp);
+    }
+    posCam.lerp(objCam, 0.09);
+    mira.lerp(objMira, 0.09);
+    camara.position.copy(posCam);
+    camara.lookAt(mira);
+
+    // Giro: arrastre con inercia; al final gira solo, durante el vuelo vuelve a su sitio
+    if (!arrastrando) {
+      girado += velGiro;
+      velGiro *= 0.94;
+      if (p > 0.95) girado += 0.004;
+      else girado += (Math.round(girado / (Math.PI * 2)) * Math.PI * 2 - girado) * 0.03;
+    }
+    giro.rotation.y = girado;
+
+    // La gorra se inclina con la velocidad del scroll
+    const vel = p - pAnterior;
+    pAnterior = p;
+    inclina += (Math.max(-0.3, Math.min(0.3, vel * 40)) * lejos - inclina) * 0.1;
+    inclinacion.rotation.x = inclina;
+    pivote.position.y = Math.sin(t * 1.1) * 0.03 * lejos;
+
+    // ¿Está la cámara dentro de la copa? (elipsoide con centro en la base)
+    const r = Math.hypot(posCam.x, (posCam.y + 0.35) / 0.9, (posCam.z + 0.35) / 1.08);
+    const dentroF = (1 - suave((r - 0.8) / 0.3)) * suave((posCam.y + 0.4) / 0.1);
+    luzInterior.intensity = 2.5 * dentroF;
+
+    // Dentro de la gorra se abre el ángulo para ver todas las cintas
+    const fov = 30 + (movil ? 50 : 40) * dentroF;
+    if (Math.abs(camara.fov - fov) > 0.05) { camara.fov = fov; camara.updateProjectionMatrix(); }
+
+    // Linterna: delante de la cámara, desplazada hacia el ratón
+    const entrada = suave((p - 0.06) / 0.08);
+    linterna.intensity = 6 * entrada * (1 - 0.9 * dentroF);
+    linterna.position.copy(camara.localToWorld(tmp.set(
+      movil ? 0.6 : raton.x * 1.6, movil ? 0.4 : -raton.y * 1.1, -1.2,
+    )));
+
+    polvo.rotation.y = t * 0.015;
+    polvo.position.y = Math.sin(t * 0.3) * 0.12;
+
+    // Frase → foco → gorra
+    const fraseO = 1 - suave((p - 0.025) / 0.06);
+    frase.style.opacity = fraseO;
+    frase.style.transform = `scale(${1 + (1 - fraseO) * 0.12})`;
+    frase.style.filter = `blur(${(1 - fraseO) * 10}px)`;
+    foco.style.opacity = suave((p - 0.06) / 0.1) * (0.35 + 0.65 * lejos);
+    lienzo.style.opacity = entrada;
+    desliza.style.opacity = 1 - suave(p / 0.04);
+    const finalO = suave((p - 0.94) / 0.03);
+    final.style.opacity = finalO;
+    final.style.transform = `translateY(${(1 - finalO) * 20}px)`;
+    final.classList.toggle("activo", finalO > 0.5);
+    barra.style.height = `${p * 100}%`;
+
+    renderer.render(escena, camara);
+    pintarNotas(p, lienzo.clientWidth, lienzo.clientHeight);
+  }
+
+  bucle();
+}

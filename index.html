@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PardoHT — Faith in me</title>
+  <meta name="description" content="PardoHT. Faith in me. Gorras trucker de terciopelo para cuando quieres que te vean.">
+  <link rel="icon" href="img/logo-rosa.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=Dancing+Script:wght@600&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    } }
+  </script>
+</head>
+<body>
+
+  <!-- Barra de aviso -->
+  <div class="aviso">
+    <div class="aviso__pista">
+      <span>FAITH IN ME</span><span>·</span>
+      <span>ENVÍOS 24/48H A TODA ESPAÑA</span><span>·</span>
+      <span>UNIDADES LIMITADAS — NO RESTOCK</span><span>·</span>
+      <span>FAITH IN ME</span><span>·</span>
+      <span>ENVÍOS 24/48H A TODA ESPAÑA</span><span>·</span>
+      <span>UNIDADES LIMITADAS — NO RESTOCK</span><span>·</span>
+    </div>
+  </div>
+
+  <!-- Cabecera -->
+  <header class="cabecera">
+    <nav class="cabecera__izq">
+      <a href="#producto">Comprar</a>
+    </nav>
+    <a href="#" class="cabecera__logo" aria-label="PardoHT inicio">
+      <img src="img/logo-negro.png" alt="PardoHT">
+    </a>
+    <div class="cabecera__der">
+      <button class="icono" id="btnCarrito" aria-label="Carrito">
+        <svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        <span class="contador" id="contador">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Intro 3D (intro3d.js): frase → gorra en el centro → gira mostrando detalles -->
+    <section class="intro" id="intro">
+      <div class="intro__pegajoso" id="introPegajoso">
+        <div class="intro__textura"></div>
+
+        <div class="intro__frase" id="introFrase">
+          <p class="intro__etiqueta">PARDOHT · DROP 01</p>
+          <h1>FAITH IN ME</h1>
+        </div>
+
+        <div class="intro__foco" id="introFoco"></div>
+        <canvas id="lienzo3d" aria-hidden="true"></canvas>
+        <div class="intro__simple" id="introSimple"></div>
+        <svg class="intro__lineas" id="introLineas" aria-hidden="true"></svg>
+
+        <div class="nota" data-ancla="logo" data-desde=".35" data-hasta=".46">
+          <span>01</span><b>FRONTAL DE TERCIOPELO</b><small>Pelo suave y el monograma bordado en el mismo tono.</small>
+        </div>
+        <div class="nota" data-ancla="rejilla" data-desde=".49" data-hasta=".59">
+          <span>02</span><b>REJILLA</b><small>Con «Pardo» bordado en el lateral.</small>
+        </div>
+        <div class="nota" data-ancla="cierre" data-desde=".61" data-hasta=".69">
+          <span>03</span><b>SNAPBACK</b><small>Cierre ajustable. Talla única que se adapta a ti.</small>
+        </div>
+        <div class="nota" data-ancla="dentro" data-desde=".765" data-hasta=".825">
+          <span>04</span><b>POR DENTRO</b><small>«faith in me» en la cinta de cada costura.</small>
+        </div>
+        <div class="nota" data-ancla="visera" data-desde=".87" data-hasta=".935">
+          <span>05</span><b>VISERA CURVA</b><small>Forrada también de terciopelo.</small>
+        </div>
+
+        <div class="intro__final" id="introFinal">
+          <p class="intro__etiqueta">FAITH IN ME · DROP 01</p>
+          <h2>ELIGE LA TUYA</h2>
+          <div class="selector-color selector-color--oscuro">
+            <button data-color="rosa"><i style="background:#c38f86"></i>Rosa</button>
+            <button data-color="negro"><i style="background:#1b1b1d"></i>Negro</button>
+          </div>
+          <a href="#producto" class="boton boton--claro">LA QUIERO</a>
+          <p class="intro__arrastra">↔ ARRASTRA PARA GIRARLA</p>
+        </div>
+
+
+        <p class="intro__desliza" id="introDesliza">DESLIZA<span>↓</span></p>
+        <div class="intro__progreso"><i id="introBarra"></i></div>
+      </div>
+    </section>
+
+    <!-- El producto -->
+    <section class="producto" id="producto">
+      <div class="galeria" data-aparece>
+        <div class="galeria__principal" id="galeriaPrincipal"></div>
+        <div class="galeria__miniaturas" id="galeriaMiniaturas"></div>
+      </div>
+
+      <div class="producto__info" data-aparece>
+        <p class="producto__eyebrow">FAITH IN ME · DROP 01</p>
+        <h2 id="nombreModelo"></h2>
+        <p class="producto__precio" id="precio"></p>
+        <p class="producto__texto">Frontal de terciopelo con el monograma PardoHT bordado, rejilla detrás y cierre snapback. No te la pones para pasar desapercibido: te la pones para que te vean.</p>
+        <p class="producto__etq">COLOR: <span id="colorNombre"></span></p>
+        <div class="selector-color">
+          <button data-color="rosa"><i style="background:#c38f86"></i>Rosa</button>
+          <button data-color="negro"><i style="background:#1b1b1d"></i>Negro</button>
+        </div>
+        <p class="producto__stock"><i></i>Unidades limitadas · Sin restock</p>
+
+        <div class="producto__compra">
+          <div class="cantidad cantidad--grande">
+            <button id="menos" aria-label="Quitar una">−</button>
+            <span id="cantidad">1</span>
+            <button id="mas" aria-label="Añadir una">+</button>
+          </div>
+          <button class="boton boton--oscuro" id="anadir">AÑADIR AL CARRITO</button>
+        </div>
+
+        <details open>
+          <summary>Detalles</summary>
+          <ul>
+            <li>Estilo trucker: frontal alto de terciopelo.</li>
+            <li>Monograma PardoHT bordado tono sobre tono.</li>
+            <li>Rejilla trasera con «Pardo» bordado en el lateral.</li>
+            <li>Cinta interior con «faith in me» en cada costura.</li>
+            <li>Cierre snapback ajustable, talla única.</li>
+            <li>Visera curva estructurada.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Envíos y devoluciones</summary>
+          <ul>
+            <li>Envío en 24/48h a toda España.</li>
+            <li>Devoluciones gratuitas en 14 días.</li>
+          </ul>
+        </details>
+      </div>
+    </section>
+
+    <!-- Manifiesto -->
+    <section class="manifiesto" data-aparece>
+      <img src="img/logo-rosa.png" alt="" class="manifiesto__logo">
+      <p class="manifiesto__lema">FAITH IN ME</p>
+      <p class="manifiesto__texto">No te la pones para pasar desapercibido.<br>Te la pones <em>para que te vean.</em></p>
+      <div class="manifiesto__puntos">
+        <div><b>Terciopelo</b><span>Frontal</span></div>
+        <div><b>Rejilla</b><span>Paneles traseros</span></div>
+        <div><b>Snapback</b><span>Talla única</span></div>
+      </div>
+    </section>
+
+    <!-- Próximo drop + acceso anticipado -->
+    <section class="acceso" data-aparece>
+      <p class="acceso__mini">PRÓXIMO DROP</p>
+      <div class="cuenta" id="cuenta">
+        <div><b data-u="d">00</b><span>Días</span></div>
+        <div><b data-u="h">00</b><span>Horas</span></div>
+        <div><b data-u="m">00</b><span>Min</span></div>
+        <div><b data-u="s">00</b><span>Seg</span></div>
+      </div>
+      <h2>ACCESO ANTICIPADO</h2>
+      <form class="acceso__form" id="formAcceso">
+        <input type="email" placeholder="Tu email" required aria-label="Email">
+        <button type="submit" aria-label="Apuntarme">→</button>
+      </form>
+      <p class="acceso__ok" id="accesoOk" hidden>Hecho. Te avisamos antes que a nadie.</p>
+    </section>
+  </main>
+
+  <footer class="pie">
+    <img src="img/logo-blanco.png" alt="PardoHT" class="pie__logo">
+    <nav class="pie__enlaces">
+      <a href="#producto">Comprar</a>
+      <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
+      <a href="https://tiktok.com" target="_blank" rel="noopener">TikTok</a>
+      <a href="#">Envíos y devoluciones</a>
+      <a href="#">Contacto</a>
+    </nav>
+    <p class="pie__legal">© <span id="anio"></span> PardoHT. Todos los derechos reservados.</p>
+  </footer>
+
+  <!-- Carrito -->
+  <div class="capa" id="capa"></div>
+  <aside class="carrito" id="carrito" aria-label="Carrito">
+    <div class="carrito__cabeza">
+      <h3>CARRITO</h3>
+      <button class="icono" id="cerrarCarrito" aria-label="Cerrar carrito">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="carrito__lista" id="carritoLista"></div>
+    <div class="carrito__pie">
+      <div class="carrito__total"><span>TOTAL</span><b id="carritoTotal">0,00 €</b></div>
+      <button class="boton boton--oscuro" id="btnPagar">FINALIZAR COMPRA</button>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+  <script type="module" src="intro3d.js"></script>
+</body>
+</html>
