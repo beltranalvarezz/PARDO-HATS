@@ -12,6 +12,7 @@ const final = document.querySelector("#introFinal");
 const desliza = document.querySelector("#introDesliza");
 const cuenta = document.querySelector("#introCuenta");
 const barra = document.querySelector("#introBarra");
+const btnGiro = document.querySelector("#btnGiro");
 const svgLineas = document.querySelector("#introLineas");
 
 // Ruta de la cámara: [progreso, posición de la cámara, punto al que mira] (coordenadas de la escena)
@@ -51,10 +52,17 @@ function modoSimple() {
   document.querySelector("#introSimple").innerHTML = gorraSVG(porId(colorActivo));
 }
 
-let THREE, RoomEnvironment;
+let THREE, RoomEnvironment, POST;
 try {
   THREE = await import("three");
   ({ RoomEnvironment } = await import("three/addons/environments/RoomEnvironment.js"));
+  // Postproceso (oclusión ambiental); si no carga, la intro funciona igual sin él
+  POST = await Promise.all([
+    import("three/addons/postprocessing/EffectComposer.js"),
+    import("three/addons/postprocessing/RenderPass.js"),
+    import("three/addons/postprocessing/GTAOPass.js"),
+    import("three/addons/postprocessing/OutputPass.js"),
+  ]).catch(() => null);
   await iniciar();
 } catch (e) {
   console.warn("Intro 3D no disponible:", e);
@@ -291,6 +299,8 @@ async function iniciar() {
     map: mapaRejilla, alphaMap: alfaRejilla, alphaTest: 0.5,
     roughness: 0.75, side: THREE.DoubleSide,
   });
+  // Rejilla con grosor: segunda capa interior algo más oscura
+  const rejillaInterior = rejilla.clone();
   const telaVisera = new THREE.MeshStandardMaterial({ roughness: 1, side: THREE.DoubleSide });
   const plastico = new THREE.MeshStandardMaterial({ roughness: 0.35 });
   const relieve = Array.from({ length: 4 }, (_, k) => new THREE.MeshStandardMaterial({
@@ -304,14 +314,21 @@ async function iniciar() {
   const cinta = new THREE.MeshStandardMaterial({ transparent: true, alphaTest: 0.5, side: THREE.BackSide, roughness: 0.7 });
   const badana = new THREE.MeshStandardMaterial({ roughness: 1, side: THREE.BackSide });
 
+  // Detalle real del pelo, sacado de las fotos de la gorra
+  const texDetalle = await new THREE.TextureLoader().loadAsync("img/texturas/pelo-detalle.png");
+  texDetalle.colorSpace = THREE.SRGBColorSpace;
+  texDetalle.wrapS = texDetalle.wrapT = THREE.RepeatWrapping;
+  texDetalle.repeat.set(8, 4);
+  texDetalle.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
   // Capas de pelo: de la raíz (oscura) a las puntas (más claras)
-  const CAPAS = 22, LARGO_PELO = 0.12;
+  const CAPAS = 34, LARGO_PELO = 0.13;
   const pelos = Array.from({ length: CAPAS }, (_, k) => {
     const f = (k + 1) / CAPAS;
     return {
       f,
       m: new THREE.MeshPhysicalMaterial({
-        map: mapaPelo, alphaMap: texPelo, alphaTest: 0.05 + 0.88 * f,
+        map: texDetalle, alphaMap: texPelo, alphaTest: 0.05 + 0.88 * f,
         roughness: 1, sheen: 0.8 * f, sheenRoughness: 0.5, envMapIntensity: 0.35,
       }),
     };
@@ -320,14 +337,15 @@ async function iniciar() {
   function pintar(p) {
     const pelo = new THREE.Color(p.hex);
     tela.color.copy(pelo).multiplyScalar(0.45);
-    telaVisera.color.copy(pelo).multiplyScalar(0.45);
+    telaVisera.color.copy(pelo).multiplyScalar(0.78);
     for (const { f, m } of pelos) {
       m.color.copy(pelo).multiplyScalar(0.38 + 0.72 * f);  // raíz oscura, puntas con luz
       m.sheenColor.copy(pelo).lerp(blanco, 0.35);
     }
     // Bordado tono sobre tono: apenas más claro que el pelo, como en la gorra real
-    for (const [k, m] of relieve.entries()) m.color.copy(pelo).multiplyScalar(0.55 + 0.07 * k).lerp(blanco, p.id === "negro" ? 0.03 * k : 0.02 * k);
+    for (const [k, m] of relieve.entries()) m.color.copy(pelo).multiplyScalar(0.5 + 0.05 * k).lerp(blanco, p.id === "negro" ? 0.03 * k : 0.02 * k);
     rejilla.color.set(p.rejilla);
+    rejillaInterior.color.set(p.rejilla).multiplyScalar(0.6);
     plastico.color.set(p.rejilla).multiplyScalar(0.9);
     bordadoPardo.color.set(p.hilo);
     forro.color.set(p.forro);
@@ -347,13 +365,14 @@ async function iniciar() {
     sombra(new THREE.Mesh(geoFrente, tela)),
     new THREE.Mesh(geoFrente, forro),
     sombra(new THREE.Mesh(casco(1, ...tramoRejilla), rejilla)),
+    new THREE.Mesh(casco(0.986, ...tramoRejilla), rejillaInterior),
     new THREE.Mesh(casco(1.006, ...tramoRejilla), bordadoPardo),
     new THREE.Mesh(casco(0.994, 0, Math.PI * 2), cinta),
   );
   relieve.forEach((m, k) => copa.add(new THREE.Mesh(casco(1 + LARGO_PELO * 0.9 + 0.006 * k, ...tramoFrente), m)));
   for (const { f, m } of pelos) {
     const capa = new THREE.Mesh(casco(1 + LARGO_PELO * f, ...tramoFrente), m);
-    capa.position.y = -0.025 * f * f;  // el pelo cae, peinado hacia abajo
+    capa.position.y = -0.03 * f * f;  // el pelo cae, peinado hacia abajo
     capa.receiveShadow = true;
     copa.add(capa);
   }
@@ -515,16 +534,33 @@ async function iniciar() {
     }
   }
 
+  /* ---------- Oclusión ambiental: sombras de contacto en uniones y pliegues ---------- */
+  let composer = null;
+  if (POST) {
+    const [{ EffectComposer }, { RenderPass }, { GTAOPass }, { OutputPass }] = POST;
+    composer = new EffectComposer(renderer);
+    composer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    composer.addPass(new RenderPass(escena, camara));
+    const ao = new GTAOPass(escena, camara, 1, 1);
+    ao.updateGtaoMaterial({ radius: 0.35, distanceExponent: 1.5, thickness: 1, scale: 1.2, samples: 16 });
+    ao.blendIntensity = 0.85;
+    composer.addPass(ao);
+    composer.addPass(new OutputPass());
+  }
+
   /* ---------- Tamaño ---------- */
   let movil = false;
   function ajustar() {
     const w = lienzo.clientWidth, h = lienzo.clientHeight;
+    if (!w || !h) return;  // aún sin medidas (pestaña oculta o en carga)
     renderer.setSize(w, h, false);
+    if (composer) composer.setSize(w, h);
     camara.aspect = w / h;
     camara.updateProjectionMatrix();
     movil = w / h < 0.8;
   }
   addEventListener("resize", ajustar);
+  new ResizeObserver(ajustar).observe(lienzo);
 
   pintar(porId(colorActivo));
   ajustar();
@@ -537,7 +573,13 @@ async function iniciar() {
   });
 
   // Arrastrar para girar la gorra, con inercia
-  let girado = 0, velGiro = 0, arrastrando = false, ultimoX = 0;
+  let girado = 0, velGiro = 0, arrastrando = false, ultimoX = 0, giroAuto = true;
+  // Al final gira sola; el botón lo para o lo reanuda
+  btnGiro.addEventListener("click", () => {
+    giroAuto = !giroAuto;
+    btnGiro.classList.toggle("activo", giroAuto);
+    btnGiro.textContent = giroAuto ? "Parar giro" : "Girar sola";
+  });
   pegajoso.addEventListener("pointerdown", (e) => {
     if (e.target.closest("a, button")) return;
     arrastrando = true; ultimoX = e.clientX;
@@ -601,7 +643,7 @@ async function iniciar() {
     if (!arrastrando) {
       girado += velGiro;
       velGiro *= 0.94;
-      if (p > 0.95) girado += 0.004;
+      if (p > 0.95 && giroAuto) girado += 0.004;
       else girado += (Math.round(girado / (Math.PI * 2)) * Math.PI * 2 - girado) * 0.03;
     }
     giro.rotation.y = girado;
@@ -645,7 +687,8 @@ async function iniciar() {
     final.classList.toggle("activo", finalO > 0.5);
     barra.style.height = `${p * 100}%`;
 
-    renderer.render(escena, camara);
+    if (!lienzo.clientWidth || !lienzo.clientHeight) return;
+    if (composer) composer.render(); else renderer.render(escena, camara);
     pintarNotas(p, lienzo.clientWidth, lienzo.clientHeight);
   }
 

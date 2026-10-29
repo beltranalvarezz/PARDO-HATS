@@ -114,6 +114,8 @@ principal.addEventListener("touchend", (e) => {
 function elegirColor(id) {
   colorActivo = id;
   const p = porId(id);
+  // Fondo de la intro: lila con la rosa, gris claro con la negra
+  $("#intro").classList.toggle("intro--claro", id === "negro");
   $("#colorNombre").textContent = p.color;
   document.querySelectorAll("[data-color]").forEach((b) => b.classList.toggle("activo", b.dataset.color === id));
   pintarGaleria();

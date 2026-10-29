@@ -13,7 +13,8 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: clip; }
+body { overflow-x: clip; }
 body {
   font-family: var(--fuente);
   color: var(--negro);
@@ -102,6 +103,27 @@ body.bloqueado { overflow: hidden; }
 #lienzo3d.arrastrando { cursor: grabbing; }
 .intro__pegajoso { touch-action: pan-y; }
 .intro__arrastra { margin-top: 16px; font-size: 10px; font-weight: 800; letter-spacing: .25em; opacity: .55; }
+#btnGiro { font: inherit; letter-spacing: inherit; text-decoration: underline; text-underline-offset: 3px; color: inherit; }
+
+/* Fondo gris claro cuando se elige la gorra negra (se funde sobre el lila) */
+.intro__pegajoso::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .7s ease;
+  background: radial-gradient(ellipse at 50% 48%, #f3f1ef 0%, #e2dfdc 55%, #cdc9c5 100%);
+}
+.intro__foco { transition: background .7s ease; }
+.intro--claro .intro__pegajoso::before { opacity: 1; }
+.intro--claro { color: var(--negro); }
+.intro--claro .intro__foco { background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.35) 0%, rgba(235,232,229,.2) 35%, rgba(200,196,192,.75) 70%); }
+.intro--claro .intro__lineas path { stroke: rgba(17,17,17,.55); }
+.intro--claro .intro__lineas .punto { fill: var(--negro); }
+.intro--claro .intro__lineas .onda { stroke: var(--negro); }
+.intro--claro .nota { text-shadow: none; }
+.intro--claro .intro__cuenta .cuenta b { color: var(--negro); }
+.intro--claro .intro__cuenta .cuenta span { color: rgba(17,17,17,.55); }
+.intro--claro .selector-color--oscuro button { border-color: rgba(17,17,17,.25); color: var(--negro); }
+.intro--claro .selector-color--oscuro button.activo { background: var(--negro); border-color: var(--negro); color: var(--blanco); }
+.intro--claro .intro__final .boton--claro { background: var(--negro); color: var(--blanco); }
+.intro--claro .intro__progreso { background: rgba(17,17,17,.15); }
 
 /* Notas sobre la gorra */
 .intro__lineas { position: absolute; inset: 0; z-index: 4; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
@@ -297,7 +319,8 @@ body.bloqueado { overflow: hidden; }
   .galeria { grid-template-columns: 1fr; }
   .galeria__principal { grid-column: 1; }
   .galeria__miniaturas { grid-column: 1; grid-row: 2; flex-direction: row; }
-  .miniatura { width: 76px; }
+  .miniatura { flex: 1 1 0; min-width: 0; max-width: 90px; }
+  .galeria, .producto__info { min-width: 0; }
   .manifiesto { padding: 70px 16px; }
   .manifiesto__puntos { gap: 30px; }
   .cuenta b { font-size: 28px; }
