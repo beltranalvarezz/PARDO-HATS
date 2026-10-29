@@ -10,6 +10,7 @@ const frase = document.querySelector("#introFrase");
 const foco = document.querySelector("#introFoco");
 const final = document.querySelector("#introFinal");
 const desliza = document.querySelector("#introDesliza");
+const cuenta = document.querySelector("#introCuenta");
 const barra = document.querySelector("#introBarra");
 const svgLineas = document.querySelector("#introLineas");
 
@@ -457,7 +458,7 @@ async function iniciar() {
   const NS = "http://www.w3.org/2000/svg";
   const notas = [...document.querySelectorAll(".nota")].map((el) => {
     const g = document.createElementNS(NS, "g");
-    g.innerHTML = `<path/><circle class="onda" r="13"/><circle class="punto" r="4.5"/>`;
+    g.innerHTML = `<path/><circle class="onda" r="10"/><circle class="punto" r="3.5"/>`;
     svgLineas.appendChild(g);
     return {
       el, g, path: g.querySelector("path"), circulos: g.querySelectorAll("circle"),
@@ -513,28 +514,6 @@ async function iniciar() {
       n.el.style.transform = `translate(${lx}px, ${ly + (1 - o) * 14}px)`;
     }
   }
-
-  /* ---------- Polvo flotante: da profundidad al vuelo ---------- */
-  const chispa = textura(64, 64, (x) => {
-    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
-    g.addColorStop(0, "rgba(255,255,255,1)");
-    g.addColorStop(0.4, "rgba(255,255,255,.35)");
-    g.addColorStop(1, "rgba(255,255,255,0)");
-    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
-  });
-  const motas = [];
-  while (motas.length < 650 * 3) {
-    const x = (Math.random() - 0.5) * 14, y = Math.random() * 6.5 - 2.8, z = (Math.random() - 0.5) * 14;
-    if (Math.hypot(x, y * 1.4, z + 0.35) < 1.8) continue;  // nada dentro ni pegado a la gorra
-    motas.push(x, y, z);
-  }
-  const geoPolvo = new THREE.BufferGeometry();
-  geoPolvo.setAttribute("position", new THREE.Float32BufferAttribute(motas, 3));
-  const polvo = new THREE.Points(geoPolvo, new THREE.PointsMaterial({
-    map: chispa, color: 0xf6c9dd, size: 0.06, sizeAttenuation: true,
-    transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending,
-  }));
-  escena.add(polvo);
 
   /* ---------- Tamaño ---------- */
   let movil = false;
@@ -650,8 +629,6 @@ async function iniciar() {
       movil ? 0.6 : raton.x * 1.6, movil ? 0.4 : -raton.y * 1.1, -1.2,
     )));
 
-    polvo.rotation.y = t * 0.015;
-    polvo.position.y = Math.sin(t * 0.3) * 0.12;
 
     // Frase → foco → gorra
     const fraseO = 1 - suave((p - 0.025) / 0.06);
@@ -661,6 +638,7 @@ async function iniciar() {
     foco.style.opacity = suave((p - 0.06) / 0.1) * (0.35 + 0.65 * lejos);
     lienzo.style.opacity = entrada;
     desliza.style.opacity = 1 - suave(p / 0.04);
+    cuenta.style.opacity = fraseO;
     const finalO = suave((p - 0.94) / 0.03);
     final.style.opacity = finalO;
     final.style.transform = `translateY(${(1 - finalO) * 20}px)`;

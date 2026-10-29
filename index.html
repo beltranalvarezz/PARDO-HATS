@@ -8,8 +8,8 @@
   <link rel="icon" href="img/logo-rosa.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=Dancing+Script:wght@600&family=Pacifico&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="estilos.css">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=Dancing+Script:wght@600&family=Pacifico&family=Pinyon+Script&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css?v=4">
   <script type="importmap">
     { "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -51,11 +51,19 @@
     <!-- Intro 3D (intro3d.js): frase → gorra en el centro → gira mostrando detalles -->
     <section class="intro" id="intro">
       <div class="intro__pegajoso" id="introPegajoso">
-        <div class="intro__textura"></div>
+        <div class="intro__cuenta" id="introCuenta">
+          <p>PRÓXIMO DROP</p>
+          <div class="cuenta" id="cuenta">
+            <div><b data-u="d">00</b><span>Días</span></div>
+            <div><b data-u="h">00</b><span>Horas</span></div>
+            <div><b data-u="m">00</b><span>Min</span></div>
+            <div><b data-u="s">00</b><span>Seg</span></div>
+          </div>
+        </div>
 
         <div class="intro__frase" id="introFrase">
           <p class="intro__etiqueta">PARDOHT · DROP 01</p>
-          <h1>FAITH IN ME</h1>
+          <h1>Faith in me</h1>
         </div>
 
         <div class="intro__foco" id="introFoco"></div>
@@ -64,24 +72,24 @@
         <svg class="intro__lineas" id="introLineas" aria-hidden="true"></svg>
 
         <div class="nota" data-ancla="logo" data-desde=".35" data-hasta=".46">
-          <span>01</span><b>FRONTAL DE TERCIOPELO</b><small>Pelo suave y el monograma bordado en el mismo tono.</small>
+          <span>01</span><b>Frontal de terciopelo</b><small>Pelo suave y el monograma bordado en el mismo tono.</small>
         </div>
         <div class="nota" data-ancla="rejilla" data-desde=".49" data-hasta=".59">
-          <span>02</span><b>REJILLA</b><small>Con «Pardo» bordado en el lateral.</small>
+          <span>02</span><b>Rejilla</b><small>Con «Pardo» bordado en el lateral.</small>
         </div>
         <div class="nota" data-ancla="cierre" data-desde=".61" data-hasta=".69">
-          <span>03</span><b>SNAPBACK</b><small>Cierre ajustable. Talla única que se adapta a ti.</small>
+          <span>03</span><b>Snapback</b><small>Cierre ajustable. Talla única que se adapta a ti.</small>
         </div>
         <div class="nota" data-ancla="dentro" data-desde=".765" data-hasta=".825">
-          <span>04</span><b>POR DENTRO</b><small>«faith in me» en la cinta de cada costura.</small>
+          <span>04</span><b>Por dentro</b><small>«faith in me» en la cinta de cada costura.</small>
         </div>
         <div class="nota" data-ancla="visera" data-desde=".87" data-hasta=".935">
-          <span>05</span><b>VISERA CURVA</b><small>Forrada también de terciopelo.</small>
+          <span>05</span><b>Visera curva</b><small>Forrada también de terciopelo.</small>
         </div>
 
         <div class="intro__final" id="introFinal">
           <p class="intro__etiqueta">FAITH IN ME · DROP 01</p>
-          <h2>ELIGE LA TUYA</h2>
+          <h2>Elige la tuya</h2>
           <div class="selector-color selector-color--oscuro">
             <button data-color="rosa"><i style="background:#c38f86"></i>Rosa</button>
             <button data-color="negro"><i style="background:#1b1b1d"></i>Negro</button>
@@ -159,13 +167,7 @@
 
     <!-- Próximo drop + acceso anticipado -->
     <section class="acceso" data-aparece>
-      <p class="acceso__mini">PRÓXIMO DROP</p>
-      <div class="cuenta" id="cuenta">
-        <div><b data-u="d">00</b><span>Días</span></div>
-        <div><b data-u="h">00</b><span>Horas</span></div>
-        <div><b data-u="m">00</b><span>Min</span></div>
-        <div><b data-u="s">00</b><span>Seg</span></div>
-      </div>
+      <p class="acceso__mini">STOCK LIMITADO — NO RESTOCK</p>
       <h2>ACCESO ANTICIPADO</h2>
       <form class="acceso__form" id="formAcceso">
         <input type="email" placeholder="Tu email" required aria-label="Email">
@@ -205,7 +207,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="script.js"></script>
-  <script type="module" src="intro3d.js"></script>
+  <script src="script.js?v=4"></script>
+  <script type="module" src="intro3d.js?v=4"></script>
 </body>
 </html>

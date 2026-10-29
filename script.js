@@ -85,6 +85,30 @@ $("#galeriaMiniaturas").addEventListener("click", (e) => {
   pintarGaleria();
 });
 
+// Zoom: con ratón, la foto se amplía siguiendo el cursor
+const principal = $("#galeriaPrincipal");
+principal.addEventListener("pointermove", (e) => {
+  if (e.pointerType !== "mouse") return;
+  const r = principal.getBoundingClientRect();
+  principal.style.setProperty("--zx", `${((e.clientX - r.left) / r.width) * 100}%`);
+  principal.style.setProperty("--zy", `${((e.clientY - r.top) / r.height) * 100}%`);
+  principal.classList.add("zoom");
+});
+principal.addEventListener("pointerleave", () => principal.classList.remove("zoom"));
+
+// Deslizar: en el móvil se pasa de foto arrastrando a los lados
+let toqueX = null;
+principal.addEventListener("touchstart", (e) => { toqueX = e.touches[0].clientX; }, { passive: true });
+principal.addEventListener("touchend", (e) => {
+  if (toqueX === null) return;
+  const dx = e.changedTouches[0].clientX - toqueX;
+  toqueX = null;
+  if (Math.abs(dx) < 40) return;
+  const total = vistas[colorActivo].length;
+  vistaActiva = (vistaActiva + (dx < 0 ? 1 : -1) + total) % total;
+  pintarGaleria();
+});
+
 /* ---------- Color ---------- */
 // Lo usan los selectores de la intro y de la ficha; intro3d.js escucha "colorpardo" para pintar la gorra 3D.
 function elegirColor(id) {

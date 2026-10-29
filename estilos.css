@@ -9,6 +9,7 @@
   --linea: #e4e2df;
   --fuente: "Archivo", Arial, sans-serif;
   --alto-cab: 72px;
+  --caligrafia: "Pinyon Script", "Snell Roundhand", cursive;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -74,23 +75,23 @@ body.bloqueado { overflow: hidden; }
 .intro__pegajoso {
   position: sticky; top: var(--alto-cab); overflow: hidden;
   height: calc(100vh - var(--alto-cab)); height: calc(100svh - var(--alto-cab));
-  background:
-    radial-gradient(ellipse at 50% 50%, #5e2642 0%, transparent 65%),
-    #14080e;
+  background: radial-gradient(ellipse at 50% 48%, #3e1a2d 0%, #1a0b13 45%, #0c0609 100%);
 }
-.intro__textura {
-  position: absolute; inset: 0; opacity: .3; mix-blend-mode: overlay; pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 /* La frase, sola */
 .intro__frase {
   position: absolute; inset: 0; z-index: 1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; padding: 0 16px;
 }
-.intro__frase h1 { font-size: clamp(30px, 5vw, 72px); font-weight: 800; letter-spacing: .32em; margin-right: -.32em; line-height: 1; }
-.intro__etiqueta { font-size: 13px; font-weight: 800; letter-spacing: .3em; color: var(--rosa); margin-bottom: 22px; }
+.intro__frase h1 { font-family: var(--caligrafia); font-size: clamp(72px, 12vw, 190px); font-weight: 400; line-height: 1; }
+.intro__etiqueta { font-size: 11px; font-weight: 700; letter-spacing: .4em; color: var(--rosa); margin-bottom: 10px; }
+
+/* Contador del próximo drop, arriba en el centro */
+.intro__cuenta { position: absolute; top: 26px; left: 0; right: 0; z-index: 5; text-align: center; pointer-events: none; }
+.intro__cuenta p { font-size: 10px; font-weight: 700; letter-spacing: .4em; opacity: .65; margin-bottom: 8px; }
+.intro__cuenta .cuenta { margin: 0; gap: 20px; }
+.intro__cuenta .cuenta b { font-size: 24px; font-weight: 500; color: var(--blanco); }
+.intro__cuenta .cuenta span { font-size: 9px; letter-spacing: .2em; color: rgba(255,255,255,.55); }
 
 /* Foco: todo se oscurece salvo el centro */
 .intro__foco {
@@ -104,7 +105,7 @@ body.bloqueado { overflow: hidden; }
 
 /* Notas sobre la gorra */
 .intro__lineas { position: absolute; inset: 0; z-index: 4; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-.intro__lineas path { fill: none; stroke: rgba(255,255,255,.85); stroke-width: 1.2; }
+.intro__lineas path { fill: none; stroke: rgba(255,255,255,.7); stroke-width: .8; }
 .intro__lineas .punto { fill: var(--blanco); }
 .intro__lineas .onda { fill: none; stroke: var(--blanco); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; animation: onda 1.8s ease-out infinite; }
 @keyframes onda { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
@@ -114,9 +115,9 @@ body.bloqueado { overflow: hidden; }
   opacity: 0; pointer-events: none; will-change: transform, opacity;
   text-shadow: 0 2px 18px rgba(0,0,0,.7);
 }
-.nota span { display: block; font-size: 11px; font-weight: 800; letter-spacing: .25em; color: var(--rosa); margin-bottom: 6px; }
-.nota b { display: block; font-size: 22px; font-weight: 900; letter-spacing: .02em; line-height: 1; margin-bottom: 8px; }
-.nota small { display: block; font-size: 13px; line-height: 1.45; opacity: .75; }
+.nota span { display: block; font-size: 10px; font-weight: 700; letter-spacing: .35em; color: var(--rosa); margin-bottom: 2px; }
+.nota b { display: block; font-family: var(--caligrafia); font-size: 40px; font-weight: 400; line-height: 1.15; margin-bottom: 6px; }
+.nota small { display: block; font-size: 12px; line-height: 1.5; letter-spacing: .02em; opacity: .7; }
 .nota.derecha { text-align: right; }
 
 /* Cierre de la intro */
@@ -126,7 +127,7 @@ body.bloqueado { overflow: hidden; }
 }
 .intro__final.activo { pointer-events: auto; }
 .intro__final .intro__etiqueta { margin-bottom: 12px; }
-.intro__final h2 { font-size: clamp(30px, 9.5vw, 80px); font-weight: 900; line-height: .9; letter-spacing: -.02em; margin-bottom: 20px; }
+.intro__final h2 { font-family: var(--caligrafia); font-size: clamp(56px, 9vw, 120px); font-weight: 400; line-height: 1.05; margin-bottom: 18px; }
 
 /* Selector de color (intro y ficha) */
 .selector-color { display: flex; gap: 10px; margin-bottom: 28px; }
@@ -174,6 +175,9 @@ body.bloqueado { overflow: hidden; }
 .galeria { display: grid; grid-template-columns: 90px 1fr; gap: 14px; position: sticky; top: calc(var(--alto-cab) + 24px); }
 .galeria__principal { grid-column: 2; grid-row: 1; aspect-ratio: 1; background: var(--blanco); display: grid; place-items: center; overflow: hidden; }
 .galeria__principal img, .galeria__principal svg { width: 100%; height: 100%; object-fit: contain; }
+.galeria__principal img { transition: transform .25s ease; transform-origin: var(--zx, 50%) var(--zy, 50%); }
+.galeria__principal.zoom { cursor: zoom-in; }
+.galeria__principal.zoom img { transform: scale(2); }
 .galeria__principal svg { width: 86%; }
 .galeria__miniaturas { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 10px; }
 .miniatura { aspect-ratio: 1; background: var(--blanco); border: 1.5px solid var(--linea); display: grid; place-items: center; overflow: hidden; }
@@ -285,7 +289,9 @@ body.bloqueado { overflow: hidden; }
   .cabecera { padding: 0 16px; }
   .cabecera__logo img { height: 42px; }
   .nota { width: auto; }
-  .nota b { font-size: 20px; }
+  .nota b { font-size: 34px; }
+  .intro__cuenta { top: 18px; }
+  .intro__cuenta .cuenta b { font-size: 20px; }
   .intro__progreso { display: none; }
   .producto { padding: 50px 16px 70px; }
   .galeria { grid-template-columns: 1fr; }
