@@ -23,4 +23,4 @@ y abrir http://localhost:5501
 
 ## Pendiente
 - Conectar el pago (Shopify o Stripe).
-- Enlaces reales de Instagram y TikTok.
+- Añadir TikTok en el pie cuando exista la cuenta (Instagram ya enlaza a @pardoht).

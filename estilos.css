@@ -261,6 +261,14 @@ body.bloqueado { overflow: hidden; }
 .pie__logo { width: 90px; margin: 0 auto 26px; }
 .pie__enlaces { display: flex; justify-content: center; gap: 26px; flex-wrap: wrap; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 34px; }
 .pie__enlaces a:hover { color: var(--rosa); }
+.pie__redes { display: flex; justify-content: center; gap: 14px; margin-bottom: 30px; }
+.pie__redes a {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid rgba(255,255,255,.25); transition: background .2s, border-color .2s, color .2s;
+}
+.pie__redes a:hover { background: var(--rosa); border-color: var(--rosa); color: var(--negro); }
+.pie__redes svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.pie__redes svg .lleno { fill: currentColor; stroke: none; }
 .pie__legal { font-size: 11px; opacity: .5; }
 
 /* ----- Carrito ----- */
