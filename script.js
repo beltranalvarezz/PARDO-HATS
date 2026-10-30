@@ -175,10 +175,12 @@ function precioPack(n, normal) {
   return PACKS[4] + (n - 4) * EXTRA_DESDE_4;
 }
 
-// Lo que cuesta añadir una gorra más, con el precio de pack
+const envioDe = (unidades) => unidades > 0 && unidades < ENVIO_GRATIS_DESDE ? ENVIO : 0;
+
+// Lo que sube el total al añadir una gorra más: precio de pack y, al llegar a 2, el envío que deja de pagarse
 function precioDeLaSiguiente(unidades) {
-  const u = PRODUCTOS[0].precio;
-  return Math.round((precioPack(unidades + 1, (unidades + 1) * u) - precioPack(unidades, unidades * u)) * 100) / 100;
+  const u = PRODUCTOS[0].precio, pagar = (n) => precioPack(n, n * u) + envioDe(n);
+  return Math.round((pagar(unidades + 1) - pagar(unidades)) * 100) / 100;
 }
 let ofertaRechazada = false;
 try { ofertaRechazada = sessionStorage.getItem("pardoht-oferta-no") === "si"; } catch (e) { /* sin almacenamiento */ }
@@ -188,9 +190,10 @@ function pintarCarrito() {
   const unidades = ids.reduce((s, id) => s + carrito[id], 0);
   const normal = ids.reduce((s, id) => s + carrito[id] * porId(id).precio, 0);
   const total = precioPack(unidades, normal);
-  const ahorro = Math.round((normal - total) * 100) / 100;
   // Envío: 4,95 € con una gorra, gratis desde 2
-  const envio = unidades > 0 && unidades < ENVIO_GRATIS_DESDE ? ENVIO : 0;
+  const envio = envioDe(unidades);
+  // En los packs el ahorro cuenta también el envío gratis
+  const ahorro = unidades >= 2 ? Math.round((normal + ENVIO - total - envio) * 100) / 100 : 0;
   $("#carritoEnvio").hidden = unidades === 0;
   $("#carritoEnvio").innerHTML = `<span>Envío</span>${envio ? `<span>${euros(envio)}</span>` : "<b>GRATIS</b>"}`;
   $("#avisoEnvio").hidden = unidades === 0;
@@ -203,7 +206,7 @@ function pintarCarrito() {
   $("#carritoTotal").textContent = euros(total + envio);
   // Con 2 o más gorras: precio normal tachado, precio del pack y lo que se ahorra
   $("#carritoAntes").hidden = ahorro <= 0;
-  $("#carritoAntes").textContent = euros(normal + envio);
+  $("#carritoAntes").textContent = euros(total + envio + ahorro);
   $("#carritoOferta").hidden = ahorro <= 0;
   $("#carritoOferta").textContent = `PACK DE ${unidades} · AHORRAS ${euros(ahorro)}`;
   // Empujón al siguiente pack
