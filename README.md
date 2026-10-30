@@ -21,6 +21,13 @@ python -m http.server 5501
 ```
 y abrir http://localhost:5501
 
+## Copia sin conexión
+`pardoht-sin-conexion.html` es la web entera en un solo archivo (imágenes, tipografías y Three.js dentro): se abre con doble clic sin internet.
+Es una foto fija de la web: después de cambiarla, vuelve a generarla con
+```bash
+python herramientas/generar-sin-conexion.py
+```
+
 ## Pendiente
 - Conectar el pago (Shopify o Stripe).
 - Añadir TikTok en el pie cuando exista la cuenta (Instagram ya enlaza a @pardoht).
