@@ -270,17 +270,33 @@ body.bloqueado { overflow: hidden; }
 .acceso__ok { margin-top: 16px; font-weight: 700; color: var(--rosa-oscuro); }
 
 /* ----- Pie ----- */
-.pie { background: var(--negro); color: var(--blanco); padding: 60px 28px 30px; text-align: center; }
-.pie__logo { width: 90px; margin: 0 auto 26px; }
-.pie__enlaces { display: flex; justify-content: center; gap: 26px; flex-wrap: wrap; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 34px; }
-.pie__enlaces a:hover { color: var(--rosa); }
-.pie__redes { display: flex; justify-content: center; gap: 14px; margin-bottom: 30px; }
-.pie__redes a {
-  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
-  border: 1px solid rgba(255,255,255,.25); transition: background .2s, border-color .2s, color .2s;
+.pie { background: var(--negro); color: var(--blanco); padding: 34px 28px 22px; text-align: center; }
+.pie__lema { font-size: 17px; font-weight: 800; letter-spacing: .06em; margin-bottom: 52px; }
+.pie__redes { display: flex; justify-content: center; gap: 14px; margin-bottom: 60px; }
+.pie__redes a { width: 44px; height: 44px; display: grid; place-items: center; transition: color .2s; }
+.pie__redes a:hover { color: var(--rosa); }
+.pie__redes svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+
+/* Métodos de pago: distintivos propios con el nombre y el color de cada marca */
+.pagos { list-style: none; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+.pago {
+  width: 38px; height: 24px; border-radius: 3px; background: var(--blanco); color: #1a1f71;
+  display: grid; place-items: center; font: 900 9px/1 var(--fuente); letter-spacing: -.02em; white-space: nowrap; overflow: hidden;
 }
-.pie__redes a:hover { background: var(--rosa); border-color: var(--rosa); color: var(--negro); }
-.pie__redes svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.pago--visa { background: #1434cb; color: var(--blanco); font-style: italic; font-size: 10px; letter-spacing: .02em; }
+.pago--mastercard { background: #1c1c1c; display: flex; justify-content: center; }
+.pago--mastercard i { width: 13px; height: 13px; border-radius: 50%; background: #eb001b; }
+.pago--mastercard i + i { background: #f79e1b; margin-left: -5px; mix-blend-mode: screen; }
+.pago--amex { background: #016fd0; color: var(--blanco); font-size: 8px; letter-spacing: .04em; }
+.pago--apple { color: var(--negro); font-size: 7px; }
+.pago--google { color: #3c4043; font-weight: 700; }
+.pago--paypal { color: #003087; font-style: italic; font-size: 8px; }
+.pago--bizum { color: #05c3dd; font-weight: 800; }
+.pago--klarna { background: #ffa8cd; color: var(--negro); font-size: 8px; }
+
+/* El copyright final es un enlace que vuelve arriba del todo */
+.pie__arriba { display: inline-block; padding: 8px 4px; font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.75); transition: color .2s; }
+.pie__arriba:hover { color: var(--rosa); }
 .pie__redes svg .lleno { fill: currentColor; stroke: none; }
 .pie__legales { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; margin-bottom: 18px; font-size: 11px; letter-spacing: .06em; }
 .pie__legales a, .pie__legales button { color: rgba(255,255,255,.7); text-decoration: underline; text-underline-offset: 3px; padding: 6px 0; }

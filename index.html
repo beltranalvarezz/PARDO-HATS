@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=Dancing+Script:wght@600&family=Pacifico&family=Pinyon+Script&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="estilos.css?v=9">
+  <link rel="stylesheet" href="estilos.css?v=10">
   <script type="importmap">
     { "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -39,7 +39,7 @@
 <body>
 
   <!-- Barra de aviso -->
-  <div class="aviso">
+  <div class="aviso" id="arriba">
     <div class="aviso__pista">
       <span>FAITH IN ME</span><span>·</span>
       <span>ENVÍOS 24/48H A TODA ESPAÑA</span><span>·</span>
@@ -203,24 +203,36 @@
   </main>
 
   <footer class="pie">
-    <img src="img/logo-blanco.png" alt="PardoHT" class="pie__logo">
-    <nav class="pie__enlaces">
-      <a href="#producto">Comprar</a>
-      <a href="condiciones.html#envios">Envíos y devoluciones</a>
-      <a href="condiciones.html#contacto">Contacto</a>
-    </nav>
+    <p class="pie__lema">FAITH IN ME</p>
+
     <div class="pie__redes">
       <a href="https://www.instagram.com/pardoht/" target="_blank" rel="noopener" aria-label="PardoHT en Instagram">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" class="lleno"/></svg>
       </a>
     </div>
+
+    <!-- Métodos de pago: ajustar a los que active la pasarela (Shopify Payments, Stripe, Redsys…) -->
+    <ul class="pagos" aria-label="Métodos de pago">
+      <li class="pago pago--visa">VISA</li>
+      <li class="pago pago--mastercard" aria-label="Mastercard"><i></i><i></i></li>
+      <li class="pago pago--amex">AMEX</li>
+      <li class="pago pago--apple">Apple Pay</li>
+      <li class="pago pago--google">G Pay</li>
+      <li class="pago pago--paypal">PayPal</li>
+      <li class="pago pago--bizum">bizum</li>
+      <li class="pago pago--klarna">Klarna.</li>
+    </ul>
+
     <nav class="pie__legales">
+      <a href="condiciones.html#envios">Envíos y devoluciones</a>
+      <a href="condiciones.html#contacto">Contacto</a>
       <a href="privacidad.html">Privacidad</a>
       <a href="condiciones.html">Condiciones de venta</a>
       <a href="privacidad.html#cookies">Cookies</a>
       <button type="button" id="configCookies">Configurar cookies</button>
     </nav>
-    <p class="pie__legal">© <span id="anio"></span> PardoHT. Todos los derechos reservados.</p>
+
+    <a href="#arriba" class="pie__arriba" title="Volver arriba">© <span id="anio"></span>, PARDOHT</a>
   </footer>
 
   <!-- Carrito -->
