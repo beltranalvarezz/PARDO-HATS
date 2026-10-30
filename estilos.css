@@ -214,23 +214,7 @@ body.bloqueado { overflow: hidden; }
 .producto__info { padding-top: 10px; }
 .producto__eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .25em; color: var(--rosa-oscuro); margin-bottom: 14px; }
 .producto__info h2 { font-size: clamp(40px, 4.6vw, 68px); font-weight: 900; line-height: .9; letter-spacing: -.02em; margin-bottom: 16px; }
-.producto__precio { font-size: 22px; margin-bottom: 18px; }
-
-/* Packs: cuantas más gorras, menos cuesta cada una */
-.packs { margin-bottom: 26px; max-width: 480px; }
-.packs__titulo { font-size: 11px; font-weight: 800; letter-spacing: .14em; margin-bottom: 10px; }
-.packs__titulo span { font-weight: 500; letter-spacing: .04em; color: var(--gris-texto); }
-.packs__opciones { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.pack {
-  display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; text-align: left;
-  border: 1.5px solid var(--linea); border-radius: 6px; transition: border-color .2s, background .2s;
-}
-.pack:hover { border-color: var(--negro); }
-.pack.activo { border-color: var(--negro); background: #faf6f8; box-shadow: inset 0 0 0 1px var(--negro); }
-.pack b { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.pack span { font-size: 19px; font-weight: 800; }
-.pack small { font-size: 11px; color: var(--gris-texto); }
-.pack em { font-style: normal; font-weight: 700; color: var(--rosa-oscuro); }
+.producto__precio { font-size: 22px; margin-bottom: 24px; }
 .producto__texto { font-size: 15px; line-height: 1.6; color: #444; margin-bottom: 20px; max-width: 480px; }
 .producto__etq { font-size: 11px; font-weight: 800; letter-spacing: .14em; margin-bottom: 10px; }
 .producto__etq span { font-weight: 500; }
