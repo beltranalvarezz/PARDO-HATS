@@ -243,12 +243,12 @@ const observador = new IntersectionObserver((entradas) => {
 }, { threshold: 0.15 });
 document.querySelectorAll("[data-aparece]").forEach((el) => observador.observe(el));
 
-// El lema del manifiesto se abre a medida que entra en pantalla
+// El lema del manifiesto crece y aparece a medida que entra en pantalla (en caligrafía no se separan letras)
 const lema = $(".manifiesto__lema");
 addEventListener("scroll", () => {
   const r = lema.getBoundingClientRect();
   const t = Math.min(1, Math.max(0, 1 - r.top / innerHeight));
-  lema.style.letterSpacing = `${0.02 + t * 0.16}em`;
+  lema.style.transform = `scale(${0.88 + t * 0.12})`;
   lema.style.opacity = 0.25 + t * 0.75;
 }, { passive: true });
 

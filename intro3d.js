@@ -216,7 +216,7 @@ async function iniciar() {
   // Rejilla: agujeros en tresbolillo, cintas en las costuras y apertura del snapback.
   // El lienzo cubre 210° de vuelta (ancho) por 90° de altura, por eso los agujeros se dibujan achatados.
   const COSTURAS = [0, 60 / 210, 0.5, 150 / 210, 1];
-  const ARCO = { cx: 0.5, an: 0.085, alto: 0.32 };
+  const ARCO = { cx: 0.5, an: 0.08, alto: 0.21 };  // apertura del snapback: ~7 cm de ancho por ~5 cm de alto
   const dibujarRejilla = (x, w, h, conAgujeros) => {
     x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
     const estira = 1.57, paso = 15, rx = 5;
@@ -259,7 +259,7 @@ async function iniciar() {
   const texCinta = (fondo, tinta) => {
     const t = textura(2048, 1024, (x, w, h) => {
       const ancho = 40, estira = 2.16;
-      for (const grados of [30, 90, 150, 210, 270, 330]) {
+      for (const grados of [15, 90, 165, 225, 270, 315]) {
         const cx = (grados / 360) * w;
         x.fillStyle = fondo; x.fillRect(cx - ancho / 2, 0, ancho, h);
         x.save();
@@ -290,18 +290,29 @@ async function iniciar() {
   function texturasBordado(w, h, dibuja, grosor) {
     const fondo = (x) => { x.fillStyle = "#000"; x.fillRect(0, 0, w, h); x.fillStyle = x.strokeStyle = "#fff"; };
     const silueta = textura(w, h, (x) => { fondo(x); engordar(x, dibuja, grosor); });
-    const altura = textura(w, h, (x) => { fondo(x); x.filter = `blur(${grosor + 3}px)`; engordar(x, dibuja, grosor); });
+    const altura = textura(w, h, (x) => { fondo(x); x.filter = `blur(${grosor + 1}px)`; engordar(x, dibuja, grosor); });
+    // Ribete: un anillo alrededor de la silueta, más oscuro, como el borde de un bordado satinado
+    const anillo = document.createElement("canvas");
+    anillo.width = w; anillo.height = h;
+    const a = anillo.getContext("2d");
+    a.fillStyle = a.strokeStyle = "#fff";
+    engordar(a, dibuja, grosor + 4);
+    a.globalCompositeOperation = "destination-out";
+    engordar(a, dibuja, Math.max(0, grosor - 1));
     const puntadas = textura(w, h, (x) => {
       x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
       x.strokeStyle = "rgba(0,0,0,.3)"; x.lineWidth = 1.5;
       for (let k = -h; k < w; k += 5) linea(x, k, h, k + h, 0);  // hilos en diagonal, como un satinado
       grano(x, w, h);
+      x.globalCompositeOperation = "multiply";
+      x.filter = "brightness(0.55)";
+      x.drawImage(anillo, 0, 0);
     });
     puntadas.colorSpace = THREE.SRGBColorSpace;
     return { silueta, altura, puntadas };
   }
   const materialBordado = (t, relieve) => new THREE.MeshPhysicalMaterial({
-    map: t.puntadas, bumpMap: t.puntadas, bumpScale: 0.7,
+    map: t.puntadas, bumpMap: t.altura, bumpScale: 4,  // el relieve sombrea los bordes de cada letra
     alphaMap: t.silueta, alphaTest: 0.5,
     displacementMap: t.altura, displacementScale: relieve,
     roughness: 0.5, specularIntensity: 0.6, sheen: 0.5, sheenRoughness: 0.3,
@@ -341,10 +352,20 @@ async function iniciar() {
   const rejillaInterior = rejilla.clone();
   const telaVisera = new THREE.MeshStandardMaterial({ roughness: 1, side: THREE.DoubleSide });
   const plastico = new THREE.MeshStandardMaterial({ roughness: 0.35 });
-  const bordadoPardo = materialBordado(texPardo, 0.02);
+  const bordadoPardo = materialBordado(texPardo, 0.04);
   const bordadoLogo = materialBordado(texLogoBordado, 0.03);
   const cinta = new THREE.MeshStandardMaterial({ transparent: true, alphaTest: 0.5, side: THREE.BackSide, roughness: 0.7 });
-  const badana = new THREE.MeshStandardMaterial({ roughness: 1, side: THREE.BackSide });
+  const texBadana = textura(1024, 64, (x, w, h) => {
+    x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
+    x.strokeStyle = "rgba(0,0,0,.35)"; x.lineWidth = 2; x.setLineDash([7, 5]);
+    linea(x, 0, 9, w, 9); linea(x, 0, h - 9, w, h - 9);
+    x.setLineDash([]);
+    grano(x, w, h);
+  });
+  texBadana.colorSpace = THREE.SRGBColorSpace;
+  texBadana.wrapS = THREE.RepeatWrapping;
+  texBadana.repeat.set(6, 1);
+  const badana = new THREE.MeshStandardMaterial({ map: texBadana, roughness: 1, side: THREE.BackSide });
 
   // Detalle real del pelo, sacado de las fotos de la gorra
   const texDetalle = await new THREE.TextureLoader().loadAsync("img/texturas/pelo-detalle.png");
@@ -410,7 +431,7 @@ async function iniciar() {
     new THREE.Mesh(geoFrente, forro),
     sombra(new THREE.Mesh(casco(1, ...tramoRejilla), rejilla)),
     new THREE.Mesh(casco(0.986, ...tramoRejilla), rejillaInterior),
-    sombra(new THREE.Mesh(parche(1.004, 345.6, 38, 65, 22), bordadoPardo)),
+    sombra(new THREE.Mesh(parche(1.006, 348, 46, 65, 27), bordadoPardo)),
     sombra(new THREE.Mesh(parche(1 + LARGO_PELO * 0.45, 90, 56, 53.5, 41), bordadoLogo)),
     new THREE.Mesh(casco(0.994, 0, Math.PI * 2), cinta),
   );
@@ -481,26 +502,39 @@ async function iniciar() {
     gorra.add(capa);
   }
 
-  // Snapback: tira de plástico bajo la apertura con su fila de botones
-  const arcoTira = 0.62;
-  const geoTira = new THREE.TorusGeometry(1.012, 0.026, 8, 40, arcoTira);
-  geoTira.rotateX(Math.PI / 2);
-  geoTira.rotateY(arcoTira / 2 + Math.PI / 2);
-  const tira = new THREE.Mesh(geoTira, plastico);
-  tira.position.y = 0.055;
-  tira.scale.set(1, 2, 1.08);
-  gorra.add(sombra(tira));
-  const geoBoton = new THREE.CylinderGeometry(0.018, 0.018, 0.03, 16);
-  geoBoton.rotateX(Math.PI / 2);
-  for (let k = 0; k < 6; k++) {
-    const a = -0.22 + k * 0.088;
-    const soporte = new THREE.Group();
-    soporte.rotation.y = -a;
-    const b = new THREE.Mesh(geoBoton, plastico);
-    b.position.set(0, 0.055, -1.1);
-    soporte.add(b);
-    gorra.add(soporte);
-  }
+  // Snapback de plástico: la tira izquierda (por fuera) tiene una fila de agujeros y la derecha (por dentro),
+  // pivotes que asoman por esos agujeros. Ángulos medidos desde el centro de la nuca; la apertura va de -0,31 a 0,31.
+  const Y_CIERRE = 0.09;
+  const enCierre = (a, r) => new THREE.Vector3(Math.sin(a) * r, Y_CIERRE, -Math.cos(a) * r * 1.08);
+  const hacia = (a) => new THREE.Vector3(Math.sin(a), 0, -Math.cos(a) / 1.08).normalize();
+  const rectRedondo = (g, h, r) => {
+    const f = new THREE.Shape();
+    f.moveTo(-g, -h + r); f.lineTo(-g, h - r); f.quadraticCurveTo(-g, h, -g + r, h);
+    f.lineTo(g - r, h); f.quadraticCurveTo(g, h, g, h - r); f.lineTo(g, -h + r);
+    f.quadraticCurveTo(g, -h, g - r, -h); f.lineTo(-g + r, -h); f.quadraticCurveTo(-g, -h, -g, -h + r);
+    return f;
+  };
+  const tiraCurva = (a0, a1, r) => {
+    const camino = new THREE.CatmullRomCurve3(Array.from({ length: 24 }, (_, k) => enCierre(a0 + (a1 - a0) * k / 23, r)));
+    // La sección se extruye con su eje X en vertical y el Y hacia fuera: 1,6 de alto × 0,14 de grosor
+    return new THREE.ExtrudeGeometry(rectRedondo(0.08, 0.007, 0.006), { steps: 60, extrudePath: camino, bevelEnabled: false });
+  };
+  const R_FUERA = 1.004, R_DENTRO = 0.992;
+  gorra.add(sombra(new THREE.Mesh(tiraCurva(-0.36, 0.1, R_FUERA), plastico)));    // tira con agujeros
+  gorra.add(sombra(new THREE.Mesh(tiraCurva(0.36, -0.16, R_DENTRO), plastico)));  // tira con pivotes
+
+  const agujero = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 1 });
+  const geoAgujero = new THREE.CylinderGeometry(0.026, 0.026, 0.002, 24).rotateX(Math.PI / 2);
+  const geoPivote = new THREE.CylinderGeometry(0.021, 0.026, 0.016, 24).rotateX(Math.PI / 2);
+  const ponerEn = (geo, mat, a, r) => {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.copy(enCierre(a, r));
+    m.lookAt(m.position.clone().add(hacia(a)));
+    gorra.add(m);
+  };
+  for (const a of [-0.24, -0.135]) ponerEn(geoAgujero, agujero, a, R_FUERA + 0.0075);          // agujeros libres
+  for (const a of [-0.03, 0.075]) ponerEn(geoPivote, plastico, a, R_FUERA + 0.012);            // pivotes encajados
+  for (const a of [0.18, 0.285]) ponerEn(geoPivote, plastico, a, R_DENTRO + 0.012);            // pivotes sueltos
 
   // Jerarquía: flotación → inclinación → giro → gorra centrada
   gorra.position.set(0, -0.42, -0.35);
@@ -514,7 +548,7 @@ async function iniciar() {
   const anclas = {
     logo:    { pos: enCopa(90, 52, 1 + LARGO_PELO), normal: V(0, 0.5, 0.87).normalize() },
     rejilla: { pos: enCopa(-12, 64),        normal: V(-0.85, 0.5, 0.15).normalize() },
-    cierre:  { pos: V(0, 0.055, -1.13),   normal: V(0, 0, -1) },
+    cierre:  { pos: V(-0.03, 0.09, -1.1), normal: V(0, 0, -1) },
     dentro:  { pos: enCopa(90, 40, 0.99),   normal: V(0, -0.7, -0.7).normalize() },
     visera:  { pos: V(...puntoVisera(0.25, 0.75, LARGO_PELO * 0.75)), normal: V(0, 1, 0.15).normalize() },
   };
@@ -552,9 +586,10 @@ async function iniciar() {
       let d, lx, ly, largo;
 
       if (movil) {
-        // Nota abajo, línea vertical desde el punto
-        n.el.style.width = `${w - 32}px`;
-        lx = 16;
+        // Nota abajo, línea vertical desde el punto; deja sitio al círculo "-10%" si está a la vista
+        const reserva = document.querySelector("#descuentoFlotante")?.hidden === false ? 66 : 0;
+        n.el.style.width = `${w - 32 - reserva}px`;
+        lx = 16 + reserva;
         ly = h - 30 - n.el.offsetHeight;
         d = `M${sx} ${sy} L${sx} ${ly - 14}`;
         largo = Math.abs(ly - 14 - sy);

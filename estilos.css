@@ -143,7 +143,7 @@ body.bloqueado { overflow: hidden; }
   text-shadow: 0 2px 18px rgba(0,0,0,.7);
 }
 .nota span { display: block; font-size: 10px; font-weight: 700; letter-spacing: .35em; color: var(--rosa); margin-bottom: 2px; }
-.nota b { display: block; font-family: var(--caligrafia); font-size: 40px; font-weight: 400; line-height: 1.15; margin-bottom: 6px; }
+.nota b { display: block; font-family: var(--fuente); font-size: 24px; font-weight: 800; letter-spacing: .01em; line-height: 1.15; margin-bottom: 6px; }
 .nota small { display: block; font-size: 12px; line-height: 1.5; letter-spacing: .02em; opacity: .7; }
 .nota.derecha { text-align: right; }
 
@@ -240,7 +240,7 @@ body.bloqueado { overflow: hidden; }
 /* ----- Manifiesto ----- */
 .manifiesto { background: var(--negro); color: var(--blanco); text-align: center; padding: 100px 28px; }
 .manifiesto__logo { width: 140px; margin: 0 auto 34px; }
-.manifiesto__lema { font-size: clamp(34px, 6vw, 80px); font-weight: 900; letter-spacing: .12em; white-space: nowrap; color: var(--rosa); margin-bottom: 22px; }
+.manifiesto__lema { font-family: var(--caligrafia); font-size: clamp(64px, 10vw, 120px); font-weight: 400; line-height: 1.05; white-space: nowrap; color: var(--rosa); margin-bottom: 18px; transition: transform .1s linear; }
 .manifiesto__texto { font-size: clamp(20px, 2.6vw, 32px); font-weight: 800; line-height: 1.15; max-width: 900px; margin: 0 auto 60px; }
 .manifiesto__texto em { font-style: normal; color: var(--rosa); }
 .manifiesto__puntos { display: flex; justify-content: center; gap: 70px; flex-wrap: wrap; }
@@ -421,7 +421,7 @@ body.bloqueado { overflow: hidden; }
   .cabecera { padding: 0 16px; }
   .cabecera__logo img { height: 42px; }
   .nota { width: auto; }
-  .nota b { font-size: 34px; }
+  .nota b { font-size: 21px; }
   .intro__cuenta { top: 18px; }
   .intro__cuenta .cuenta b { font-size: 20px; }
   .intro__progreso { display: none; }
