@@ -129,7 +129,31 @@ document.addEventListener("click", (e) => {
 
 /* ---------- Compra ---------- */
 let cantidad = 1;
-function pintarCantidad() { $("#cantidad").textContent = cantidad; }
+function pintarCantidad() {
+  $("#cantidad").textContent = cantidad;
+  // El botón enseña lo que cuesta la cantidad elegida con el precio de pack
+  const total = precioPack(cantidad, cantidad * PRODUCTOS[0].precio);
+  $("#anadir").textContent = cantidad > 1 ? `AÑADIR ${cantidad} · ${euros(total)}` : "AÑADIR AL CARRITO";
+  pintarPacks();
+}
+
+// Packs en la ficha: 1, 2, 3 y 4 gorras con su precio; al pulsar uno se elige esa cantidad
+function pintarPacks() {
+  const unidad = PRODUCTOS[0].precio;
+  $("#packsOpciones").innerHTML = [1, 2, 3, 4].map((n) => {
+    const total = precioPack(n, n * unidad);
+    const detalle = n === 1 ? "Precio normal" : `${euros(total / n)}/u · <em>ahorras ${euros(n * unidad - total)}</em>`;
+    return `<button type="button" class="pack ${n === cantidad ? "activo" : ""}" data-pack="${n}" aria-pressed="${n === cantidad}">
+      <b>${n} ${n === 1 ? "gorra" : "gorras"}</b><span>${euros(total)}</span><small>${detalle}</small>
+    </button>`;
+  }).join("");
+}
+$("#packsOpciones").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-pack]");
+  if (!b) return;
+  cantidad = +b.dataset.pack;
+  pintarCantidad();
+});
 $("#menos").addEventListener("click", () => { cantidad = Math.max(1, cantidad - 1); pintarCantidad(); });
 $("#mas").addEventListener("click", () => { cantidad = Math.min(10, cantidad + 1); pintarCantidad(); });
 $("#anadir").addEventListener("click", () => {
