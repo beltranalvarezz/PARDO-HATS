@@ -201,7 +201,10 @@ function mostrarCapa(si) {
 $("#btnCarrito").addEventListener("click", abrirCarrito);
 $("#cerrarCarrito").addEventListener("click", cerrarCarrito);
 $("#capa").addEventListener("click", cerrarCarrito);
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") cerrarCarrito(); });
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (!$("#bienvenida").hidden) cerrarBienvenida(); else cerrarCarrito();
+});
 $("#btnPagar").addEventListener("click", () => aviso("El pago se conectará en el siguiente paso"));
 
 /* ---------- Avisos y formulario ---------- */
@@ -273,11 +276,67 @@ function decidirCookies(decision) {
   try { localStorage.setItem("pardoht-cookies", decision); } catch (e) { /* sin almacenamiento */ }
   $("#avisoCookies").hidden = true;
   if (decision === "aceptar") cargarAnalitica();
+  ponerFlotante();
+}
+// El aviso de cookies espera a que se cierre la bienvenida para no amontonar ventanas
+function avisoCookiesSiFalta() {
+  if (!leerCookies() && $("#bienvenida").hidden) { $("#avisoCookies").hidden = false; ponerFlotante(); }
 }
 document.querySelectorAll("[data-cookies]").forEach((b) => b.addEventListener("click", () => decidirCookies(b.dataset.cookies)));
-$("#configCookies").addEventListener("click", () => { $("#avisoCookies").hidden = false; });
+$("#configCookies").addEventListener("click", () => { $("#avisoCookies").hidden = false; ponerFlotante(); });
 if (leerCookies() === "aceptar") cargarAnalitica();
-else if (!leerCookies()) $("#avisoCookies").hidden = false;
+
+/* ---------- Bienvenida: 10% de descuento ---------- */
+// El mismo código hay que crearlo en la tienda (Shopify, Stripe…) para que funcione al pagar.
+const CODIGO_DESCUENTO = "FAITH10";
+const leerDescuento = () => { try { return localStorage.getItem("pardoht-descuento"); } catch (e) { return null; } };
+const guardarDescuento = (v) => { try { localStorage.setItem("pardoht-descuento", v); } catch (e) { /* sin almacenamiento */ } };
+
+// El botón "-10%" se queda abajo a la izquierda si se rechaza; se esconde mientras está el aviso de cookies
+function ponerFlotante() {
+  $("#descuentoFlotante").hidden = leerDescuento() !== "cerrado" || !$("#bienvenida").hidden || !$("#avisoCookies").hidden;
+}
+function abrirBienvenida() {
+  $("#bienvenida").hidden = false;
+  document.body.classList.add("bloqueado");
+  ponerFlotante();
+  setTimeout(() => $("#descuentoEmail").focus(), 60);
+}
+function cerrarBienvenida() {
+  $("#bienvenida").hidden = true;
+  document.body.classList.remove("bloqueado");
+  if (leerDescuento() !== "suscrito") guardarDescuento("cerrado");
+  ponerFlotante();
+  avisoCookiesSiFalta();
+}
+$("#cerrarBienvenida").addEventListener("click", cerrarBienvenida);
+$("#noGracias").addEventListener("click", cerrarBienvenida);
+$("#bienvenida").addEventListener("click", (e) => { if (e.target === e.currentTarget) cerrarBienvenida(); });
+$("#descuentoFlotante").addEventListener("click", abrirBienvenida);
+
+$("#formDescuento").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const form = e.target, email = $("#descuentoEmail").value.trim();
+  const error = (texto) => { $("#descuentoError").textContent = texto; };
+  const exito = () => {
+    guardarDescuento("suscrito");
+    $("#copiarCodigo").textContent = CODIGO_DESCUENTO;
+    $("#bienvenidaPaso1").hidden = true;
+    $("#bienvenidaPaso2").hidden = false;
+  };
+  // Antispam: campo trampa o envío instantáneo → se le da por bueno sin guardar nada
+  if (form.web.value || Date.now() - abiertaEn < 3000) return exito();
+  if (!email) return error("Escribe tu email.");
+  if (!EMAIL_VALIDO.test(email)) return error("Ese email no parece correcto.");
+  if (!$("#descuentoAcepto").checked) return error("Marca la casilla para recibir el descuento.");
+  error("");
+  // Aquí se conectará el servicio de emails (Brevo, Mailchimp…) que guarda la lista y envía el código
+  exito();
+});
+$("#descuentoEmail").addEventListener("input", () => { $("#descuentoError").textContent = ""; });
+$("#copiarCodigo").addEventListener("click", () => {
+  navigator.clipboard?.writeText(CODIGO_DESCUENTO).then(() => aviso("Código copiado"), () => {});
+});
 
 /* ---------- Cuenta atrás ---------- */
 function cuentaAtras() {
@@ -297,3 +356,7 @@ pintarCantidad();
 pintarCarrito();
 cuentaAtras();
 setInterval(cuentaAtras, 1000);
+// Primera visita: la bienvenida sale al poco de entrar; si ya se rechazó, solo el botón "-10%"
+if (!leerDescuento()) setTimeout(abrirBienvenida, 1200);
+else avisoCookiesSiFalta();
+ponerFlotante();
