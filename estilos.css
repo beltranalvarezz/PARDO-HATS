@@ -385,7 +385,8 @@ body.bloqueado { overflow: hidden; }
 .bienvenida__error { min-height: 16px; margin-top: 8px; font-size: 12px; font-weight: 700; color: #ffa3b5; }
 .bienvenida__no { margin-top: 6px; padding: 10px; font-size: 11px; letter-spacing: .12em; text-decoration: underline; color: rgba(255, 255, 255, .6); }
 .bienvenida__nota { font-size: 13px; color: rgba(255, 255, 255, .75); }
-.bienvenida__codigo { margin: 12px auto; padding: 14px 26px; border: 1.5px dashed var(--rosa); font: 900 22px var(--fuente); letter-spacing: .2em; color: var(--blanco); }
+.bienvenida__nota { line-height: 1.6; }
+.bienvenida__seguir { width: 100%; margin-top: 26px; border-radius: 4px; }
 
 /* Botón flotante "-10%" en el morado de la intro */
 .descuento-flotante {

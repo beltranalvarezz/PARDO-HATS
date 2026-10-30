@@ -286,9 +286,7 @@ document.querySelectorAll("[data-cookies]").forEach((b) => b.addEventListener("c
 $("#configCookies").addEventListener("click", () => { $("#avisoCookies").hidden = false; ponerFlotante(); });
 if (leerCookies() === "aceptar") cargarAnalitica();
 
-/* ---------- Bienvenida: 10% de descuento ---------- */
-// El mismo código hay que crearlo en la tienda (Shopify, Stripe…) para que funcione al pagar.
-const CODIGO_DESCUENTO = "FAITH10";
+/* ---------- Bienvenida: email a cambio del 10% (el descuento se envía por correo) ---------- */
 const leerDescuento = () => { try { return localStorage.getItem("pardoht-descuento"); } catch (e) { return null; } };
 const guardarDescuento = (v) => { try { localStorage.setItem("pardoht-descuento", v); } catch (e) { /* sin almacenamiento */ } };
 
@@ -320,7 +318,6 @@ $("#formDescuento").addEventListener("submit", (e) => {
   const error = (texto) => { $("#descuentoError").textContent = texto; };
   const exito = () => {
     guardarDescuento("suscrito");
-    $("#copiarCodigo").textContent = CODIGO_DESCUENTO;
     $("#bienvenidaPaso1").hidden = true;
     $("#bienvenidaPaso2").hidden = false;
   };
@@ -330,13 +327,11 @@ $("#formDescuento").addEventListener("submit", (e) => {
   if (!EMAIL_VALIDO.test(email)) return error("Ese email no parece correcto.");
   if (!$("#descuentoAcepto").checked) return error("Marca la casilla para recibir el descuento.");
   error("");
-  // Aquí se conectará el servicio de emails (Brevo, Mailchimp…) que guarda la lista y envía el código
+  // Aquí se conectará el servicio de emails (Brevo, Mailchimp…), que guarda la lista y envía el 10% por correo
   exito();
 });
 $("#descuentoEmail").addEventListener("input", () => { $("#descuentoError").textContent = ""; });
-$("#copiarCodigo").addEventListener("click", () => {
-  navigator.clipboard?.writeText(CODIGO_DESCUENTO).then(() => aviso("Código copiado"), () => {});
-});
+$("#seguirViendo").addEventListener("click", cerrarBienvenida);
 
 /* ---------- Cuenta atrás ---------- */
 function cuentaAtras() {
@@ -356,7 +351,12 @@ pintarCantidad();
 pintarCarrito();
 cuentaAtras();
 setInterval(cuentaAtras, 1000);
-// Primera visita: la bienvenida sale al poco de entrar; si ya se rechazó, solo el botón "-10%"
-if (!leerDescuento()) setTimeout(abrirBienvenida, 1200);
-else avisoCookiesSiFalta();
+// La bienvenida sale nada más entrar en cada visita (salvo si ya se apuntó);
+// si se cierra, durante esa visita queda solo el círculo "-10%" para volver a abrirla
+let vistaEnEstaVisita = false;
+try { vistaEnEstaVisita = sessionStorage.getItem("pardoht-bienvenida") === "vista"; } catch (e) { /* sin almacenamiento */ }
+if (leerDescuento() !== "suscrito" && !vistaEnEstaVisita) {
+  try { sessionStorage.setItem("pardoht-bienvenida", "vista"); } catch (e) { /* sin almacenamiento */ }
+  setTimeout(abrirBienvenida, 600);
+} else avisoCookiesSiFalta();
 ponerFlotante();
