@@ -908,10 +908,11 @@ document.addEventListener("click", (e) => {
 
 /* ---------- Compra ---------- */
 const MAX_CARRITO = 15;  // gorras por pedido, sumando los dos colores
+const MAX_SELECTOR = 99; // en la ficha se puede elegir hasta 99, pero al carrito solo entran MAX_CARRITO
 let cantidad = 1;
 function pintarCantidad() { $("#cantidad").textContent = cantidad; }
 $("#menos").addEventListener("click", () => { cantidad = Math.max(1, cantidad - 1); pintarCantidad(); });
-$("#mas").addEventListener("click", () => { cantidad = Math.min(MAX_CARRITO, cantidad + 1); pintarCantidad(); });
+$("#mas").addEventListener("click", () => { cantidad = Math.min(MAX_SELECTOR, cantidad + 1); pintarCantidad(); });
 $("#anadir").addEventListener("click", () => {
   anadir(colorActivo, cantidad);
   cantidad = 1; pintarCantidad();
