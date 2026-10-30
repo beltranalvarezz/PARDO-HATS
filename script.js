@@ -66,7 +66,7 @@ function gorraSVG(p) {
 const NOMBRES_VISTA = ["Frontal", "Lateral", "Rejilla", "Interior"];
 const vistas = Object.fromEntries(PRODUCTOS.map((p) => [p.id, p.fotos.map((f, i) => ({
   nombre: NOMBRES_VISTA[i],
-  html: `<img src="img/fotos/${f}.jpg" alt="${p.nombre} ${p.color} — ${NOMBRES_VISTA[i].toLowerCase()}" loading="lazy">`,
+  html: `<img src="img/fotos/${f}.webp" width="1400" height="1400" alt="${p.nombre} ${p.color} — ${NOMBRES_VISTA[i].toLowerCase()}" loading="lazy">`,
 }))]));
 let vistaActiva = 0;
 
@@ -214,11 +214,25 @@ function aviso(texto) {
   temporizador = setTimeout(() => t.classList.remove("visible"), 2200);
 }
 
+const abiertaEn = Date.now();
+const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 $("#formAcceso").addEventListener("submit", (e) => {
   e.preventDefault();
-  e.target.hidden = true;
+  const form = e.target, email = $("#accesoEmail").value.trim();
+  const error = (texto) => { $("#accesoError").textContent = texto; form.classList.toggle("error", !!texto); };
+
+  // Antispam: un bot rellena el campo trampa o envía en menos de 3 segundos. Se le da por bueno sin guardar nada.
+  if (form.web.value || Date.now() - abiertaEn < 3000) { form.hidden = true; $("#accesoOk").hidden = false; return; }
+
+  if (!email) return error("Escribe tu email.");
+  if (!EMAIL_VALIDO.test(email)) return error("Ese email no parece correcto. Revisa que tenga @ y dominio.");
+  if (!$("#accesoAcepto").checked) return error("Tienes que aceptar la política de privacidad.");
+  error("");
+  // Aquí se conectará el servicio de emails (Brevo, Mailchimp…), que es quien guarda la lista de verdad
+  form.hidden = true;
   $("#accesoOk").hidden = false;
 });
+$("#accesoEmail").addEventListener("input", () => { $("#accesoError").textContent = ""; $("#formAcceso").classList.remove("error"); });
 
 /* ---------- Apariciones al hacer scroll ---------- */
 const observador = new IntersectionObserver((entradas) => {
@@ -234,6 +248,36 @@ addEventListener("scroll", () => {
   lema.style.letterSpacing = `${0.02 + t * 0.16}em`;
   lema.style.opacity = 0.25 + t * 0.75;
 }, { passive: true });
+
+/* ---------- Cookies y analítica ---------- */
+// La analítica está apagada hasta tener cuenta: pon aquí el dominio de Plausible o el ID de GA4 (G-XXXX).
+const ANALITICA = { plausible: "", ga4: "" };
+
+function cargarAnalitica() {
+  if (ANALITICA.plausible) {
+    const s = document.createElement("script");
+    s.defer = true; s.dataset.domain = ANALITICA.plausible; s.src = "https://plausible.io/js/script.js";
+    document.head.appendChild(s);
+  } else if (ANALITICA.ga4) {
+    const s = document.createElement("script");
+    s.async = true; s.src = `https://www.googletagmanager.com/gtag/js?id=${ANALITICA.ga4}`;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { dataLayer.push(arguments); };
+    gtag("js", new Date()); gtag("config", ANALITICA.ga4, { anonymize_ip: true });
+  }
+}
+
+const leerCookies = () => { try { return localStorage.getItem("pardoht-cookies"); } catch (e) { return null; } };
+function decidirCookies(decision) {
+  try { localStorage.setItem("pardoht-cookies", decision); } catch (e) { /* sin almacenamiento */ }
+  $("#avisoCookies").hidden = true;
+  if (decision === "aceptar") cargarAnalitica();
+}
+document.querySelectorAll("[data-cookies]").forEach((b) => b.addEventListener("click", () => decidirCookies(b.dataset.cookies)));
+$("#configCookies").addEventListener("click", () => { $("#avisoCookies").hidden = false; });
+if (leerCookies() === "aceptar") cargarAnalitica();
+else if (!leerCookies()) $("#avisoCookies").hidden = false;
 
 /* ---------- Cuenta atrás ---------- */
 function cuentaAtras() {

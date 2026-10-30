@@ -3,13 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PardoHT — Faith in me</title>
-  <meta name="description" content="PardoHT. Faith in me. Gorras trucker de terciopelo para cuando quieres que te vean.">
-  <link rel="icon" href="img/logo-rosa.png">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <title>Gorra trucker de terciopelo rosa y negra | PardoHT — Faith in me</title>
+  <meta name="description" content="Gorra trucker de terciopelo con logo bordado, rejilla y cierre snapback. Rosa o negra, 34,99 €. Unidades limitadas del Drop 01 de PardoHT.">
+  <link rel="canonical" href="https://beltranalvarezz.github.io/PARDO-HATS/">
+  <meta name="theme-color" content="#1a0b13">
+  <!-- Vista previa al compartir (WhatsApp, Instagram, X, Facebook…) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="PardoHT">
+  <meta property="og:locale" content="es_ES">
+  <meta property="og:title" content="PardoHT — Faith in me">
+  <meta property="og:description" content="Gorra trucker de terciopelo, rosa o negra. No te la pones para pasar desapercibido.">
+  <meta property="og:url" content="https://beltranalvarezz.github.io/PARDO-HATS/">
+  <meta property="og:image" content="https://beltranalvarezz.github.io/PARDO-HATS/img/og-pardoht.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Gorra trucker PardoHT rosa de terciopelo junto al logo de la marca">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- Iconos -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="img/favicon/icono-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="img/favicon/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=Dancing+Script:wght@600&family=Pacifico&family=Pinyon+Script&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="estilos.css?v=8">
+  <link rel="stylesheet" href="estilos.css?v=9">
   <script type="importmap">
     { "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -34,9 +53,9 @@
   <!-- Cabecera -->
   <header class="cabecera">
     <nav class="cabecera__izq">
-      <a href="#producto">Comprar</a>
+      <a href="#producto" class="cabecera__cta">Comprar</a>
     </nav>
-    <a href="#" class="cabecera__logo" aria-label="PardoHT inicio">
+    <a href="#intro" class="cabecera__logo" aria-label="PardoHT inicio">
       <img src="img/logo-negro.png" alt="PardoHT">
     </a>
     <div class="cabecera__der">
@@ -169,9 +188,15 @@
     <section class="acceso" data-aparece>
       <p class="acceso__mini">STOCK LIMITADO — NO RESTOCK</p>
       <h2>ACCESO ANTICIPADO</h2>
-      <form class="acceso__form" id="formAcceso">
-        <input type="email" placeholder="Tu email" required aria-label="Email">
-        <button type="submit" aria-label="Apuntarme">→</button>
+      <form class="acceso__form" id="formAcceso" novalidate>
+        <div class="acceso__fila">
+          <input type="email" name="email" id="accesoEmail" placeholder="Tu email" autocomplete="email" required aria-label="Email" aria-describedby="accesoError">
+          <button type="submit" aria-label="Apuntarme">→</button>
+        </div>
+        <!-- Campo trampa: invisible para personas; si se rellena, es un bot -->
+        <input type="text" name="web" class="acceso__trampa" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <label class="acceso__acepto"><input type="checkbox" id="accesoAcepto" required> Acepto la <a href="privacidad.html">política de privacidad</a></label>
+        <p class="acceso__error" id="accesoError" role="alert"></p>
       </form>
       <p class="acceso__ok" id="accesoOk" hidden>Hecho. Te avisamos antes que a nadie.</p>
     </section>
@@ -181,14 +206,20 @@
     <img src="img/logo-blanco.png" alt="PardoHT" class="pie__logo">
     <nav class="pie__enlaces">
       <a href="#producto">Comprar</a>
-      <a href="#">Envíos y devoluciones</a>
-      <a href="#">Contacto</a>
+      <a href="condiciones.html#envios">Envíos y devoluciones</a>
+      <a href="condiciones.html#contacto">Contacto</a>
     </nav>
     <div class="pie__redes">
       <a href="https://www.instagram.com/pardoht/" target="_blank" rel="noopener" aria-label="PardoHT en Instagram">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" class="lleno"/></svg>
       </a>
     </div>
+    <nav class="pie__legales">
+      <a href="privacidad.html">Privacidad</a>
+      <a href="condiciones.html">Condiciones de venta</a>
+      <a href="privacidad.html#cookies">Cookies</a>
+      <button type="button" id="configCookies">Configurar cookies</button>
+    </nav>
     <p class="pie__legal">© <span id="anio"></span> PardoHT. Todos los derechos reservados.</p>
   </footer>
 
@@ -210,7 +241,16 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="script.js?v=5"></script>
+  <!-- Aviso de cookies: solo la analítica necesita permiso; el carrito es técnico -->
+  <div class="cookies" id="avisoCookies" role="dialog" aria-labelledby="cookiesTitulo" hidden>
+    <p><b id="cookiesTitulo">Cookies</b> Usamos lo imprescindible para que la web funcione (como el carrito) y, solo si aceptas, analítica para saber qué mejorar. <a href="privacidad.html#cookies">Más información</a></p>
+    <div class="cookies__botones">
+      <button type="button" class="boton boton--borde" data-cookies="rechazar">RECHAZAR</button>
+      <button type="button" class="boton boton--oscuro" data-cookies="aceptar">ACEPTAR</button>
+    </div>
+  </div>
+
+  <script src="script.js?v=6"></script>
   <script type="module" src="intro3d.js?v=8"></script>
 </body>
 </html>

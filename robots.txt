@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /PARDO-HATS/prueba-3d.html
+Disallow: /PARDO-HATS/pardoht-sin-conexion.html
+Disallow: /PARDO-HATS/herramientas/
+
+Sitemap: https://beltranalvarezz.github.io/PARDO-HATS/sitemap.xml
