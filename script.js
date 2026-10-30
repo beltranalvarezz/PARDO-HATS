@@ -158,19 +158,41 @@ function cambiar(id, d) {
   guardar(); pintarCarrito();
 }
 
+/* ---------- Packs: cuantas más gorras, menos cuesta cada una ---------- */
+// Precio total según el número de gorras del carrito (cuentan las de los dos colores).
+// Por gorra: 34,99 → 31,70 → 29,90 → 28,35. A partir de 4, cada gorra extra a 28,33 € (importes nunca redondos).
+const PACKS = { 2: 63.40, 3: 89.70, 4: 113.40 };
+const EXTRA_DESDE_4 = 28.33;
+function precioPack(n, normal) {
+  if (n < 2) return normal;
+  if (n <= 4) return PACKS[n];
+  return PACKS[4] + (n - 4) * EXTRA_DESDE_4;
+}
+
 function pintarCarrito() {
   const ids = Object.keys(carrito).filter(porId);
   const unidades = ids.reduce((s, id) => s + carrito[id], 0);
-  const total = ids.reduce((s, id) => s + carrito[id] * porId(id).precio, 0);
+  const normal = ids.reduce((s, id) => s + carrito[id] * porId(id).precio, 0);
+  const total = precioPack(unidades, normal);
+  const ahorro = Math.round((normal - total) * 100) / 100;
   const contador = $("#contador");
   contador.textContent = unidades;
   contador.classList.toggle("vacio", unidades === 0);
   $("#carritoTotal").textContent = euros(total);
+  // Con 2 o más gorras: precio normal tachado, precio del pack y lo que se ahorra
+  $("#carritoAntes").hidden = ahorro <= 0;
+  $("#carritoAntes").textContent = euros(normal);
+  $("#carritoOferta").hidden = ahorro <= 0;
+  $("#carritoOferta").textContent = `PACK DE ${unidades} · AHORRAS ${euros(ahorro)}`;
+  // Empujón al siguiente pack
+  const siguiente = unidades + 1;
+  $("#carritoSiguiente").hidden = unidades < 1 || unidades >= 4;
+  $("#carritoSiguiente").innerHTML = `Añade 1 más y te sale a <b>${euros(precioPack(siguiente, siguiente * porId(colorActivo).precio) / siguiente)}</b> cada una`;
   $("#btnPagar").disabled = unidades === 0;
   $("#carritoLista").innerHTML = ids.length ? ids.map((id) => {
     const p = porId(id);
     return `<div class="linea">
-      <div class="linea__img">${vistas[id][0].html}</div>
+      <div class="linea__img">${vistas[id][0].html.replace(' loading="lazy"', "")}</div>
       <div>
         <h4>${p.nombre}</h4>
         <p>${p.color} · ${euros(p.precio)}</p>

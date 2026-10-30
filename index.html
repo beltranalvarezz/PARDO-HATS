@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=Dancing+Script:wght@600&family=Pacifico&family=Pinyon+Script&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="estilos.css?v=15">
+  <link rel="stylesheet" href="estilos.css?v=17">
   <script type="importmap">
     { "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -246,7 +246,12 @@
     </div>
     <div class="carrito__lista" id="carritoLista"></div>
     <div class="carrito__pie">
-      <div class="carrito__total"><span>TOTAL</span><b id="carritoTotal">0,00 €</b></div>
+      <p class="carrito__oferta" id="carritoOferta" hidden></p>
+      <div class="carrito__total">
+        <span>TOTAL</span>
+        <span class="carrito__precios"><s id="carritoAntes" hidden></s><b id="carritoTotal">0,00 €</b></span>
+      </div>
+      <p class="carrito__siguiente" id="carritoSiguiente" hidden></p>
       <button class="boton boton--oscuro" id="btnPagar">FINALIZAR COMPRA</button>
     </div>
   </aside>
@@ -294,7 +299,7 @@
   </div>
   <button type="button" class="descuento-flotante" id="descuentoFlotante" aria-label="Get 10% off" hidden>-10%</button>
 
-  <script src="script.js?v=10"></script>
+  <script src="script.js?v=12"></script>
   <script type="module" src="intro3d.js?v=9"></script>
 </body>
 </html>
