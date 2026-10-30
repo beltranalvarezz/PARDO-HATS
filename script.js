@@ -128,10 +128,11 @@ document.addEventListener("click", (e) => {
 });
 
 /* ---------- Compra ---------- */
+const MAX_CARRITO = 15;  // gorras por pedido, sumando los dos colores
 let cantidad = 1;
 function pintarCantidad() { $("#cantidad").textContent = cantidad; }
 $("#menos").addEventListener("click", () => { cantidad = Math.max(1, cantidad - 1); pintarCantidad(); });
-$("#mas").addEventListener("click", () => { cantidad = Math.min(10, cantidad + 1); pintarCantidad(); });
+$("#mas").addEventListener("click", () => { cantidad = Math.min(MAX_CARRITO, cantidad + 1); pintarCantidad(); });
 $("#anadir").addEventListener("click", () => {
   anadir(colorActivo, cantidad);
   cantidad = 1; pintarCantidad();
@@ -152,13 +153,19 @@ function guardar() {
   try { localStorage.setItem("pardoht-carrito", JSON.stringify(carrito)); } catch (e) { /* sin almacenamiento */ }
 }
 
+const enCarrito = () => Object.keys(carrito).filter(porId).reduce((s, id) => s + carrito[id], 0);
+const avisoMaximo = () => aviso(`Máximo ${MAX_CARRITO} gorras por pedido`);
+
 function anadir(id, n = 1) {
-  carrito[id] = (carrito[id] || 0) + n;
+  const cabe = Math.min(n, MAX_CARRITO - enCarrito());
+  if (cabe <= 0) return avisoMaximo();
+  carrito[id] = (carrito[id] || 0) + cabe;
   guardar(); pintarCarrito();
-  aviso("Añadida al carrito");
+  cabe < n ? avisoMaximo() : aviso("Añadida al carrito");
 }
 
 function cambiar(id, d) {
+  if (d > 0 && enCarrito() >= MAX_CARRITO) return avisoMaximo();
   carrito[id] = (carrito[id] || 0) + d;
   if (carrito[id] <= 0) delete carrito[id];
   guardar(); pintarCarrito();
@@ -211,7 +218,7 @@ function pintarCarrito() {
   $("#carritoOferta").textContent = `PACK DE ${unidades} · AHORRAS ${euros(ahorro)}`;
   // Empujón al siguiente pack
   const siguiente = unidades + 1;
-  $("#carritoSiguiente").hidden = unidades < 1 || unidades >= 4;
+  $("#carritoSiguiente").hidden = unidades < 1 || unidades >= MAX_CARRITO;
   $("#carritoSiguiente").innerHTML = `Añade 1 más y te sale a <b>${euros(precioPack(siguiente, siguiente * porId(colorActivo).precio) / siguiente)}</b> cada una`;
   $("#btnPagar").disabled = unidades === 0;
   $("#carritoLista").innerHTML = ids.length ? ids.map((id) => {
@@ -232,7 +239,7 @@ function pintarCarrito() {
 
 // Con un solo color en el carrito, ofrece el otro al precio de pack (un botón; si dice que no, no se insiste)
 function tarjetaOferta(ids, unidades) {
-  if (ids.length !== 1 || ofertaRechazada) return "";
+  if (ids.length !== 1 || ofertaRechazada || unidades >= MAX_CARRITO) return "";
   const otro = otroColor(ids[0]), extra = precioDeLaSiguiente(unidades), la = FEMENINO[otro.id];
   return `<div class="upsell">
     <div class="upsell__img">${vistas[otro.id][0].html.replace(' loading="lazy"', "")}</div>
