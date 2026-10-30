@@ -345,7 +345,7 @@ body.bloqueado { overflow: hidden; }
 .carrito__vacio { padding: 50px 0; text-align: center; color: var(--gris-texto); font-size: 14px; }
 .linea { display: grid; grid-template-columns: 80px 1fr auto; gap: 14px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--linea); }
 .linea__img { background: var(--blanco); border: 1px solid var(--linea); aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; }
-.linea__img img, .linea__img svg { width: 100%; }
+.linea__img img, .linea__img svg { width: 100%; height: auto; }
 .linea h4 { font-size: 12px; font-weight: 800; margin-bottom: 4px; }
 .linea p { font-size: 12px; color: var(--gris-texto); }
 .linea .cantidad { margin-top: 8px; }
@@ -404,6 +404,25 @@ body.bloqueado { overflow: hidden; }
 }
 .descuento-flotante:hover { transform: scale(1.07); }
 .descuento-flotante[hidden] { display: none; }
+
+/* Carrito: oferta de la otra gorra y envío gratis desde 2 */
+.upsell { display: grid; grid-template-columns: 84px 1fr; gap: 14px; align-items: center; margin: 16px 0 6px; padding: 14px; background: #faf6f8; border: 1.5px solid #ecd7e1; border-radius: 8px; }
+.upsell__img { aspect-ratio: 1; background: var(--blanco); border-radius: 6px; overflow: hidden; }
+.upsell__img img { width: 100%; height: auto; object-fit: contain; }
+.upsell__titulo { font-size: 15px; font-weight: 900; margin-bottom: 2px; }
+.upsell__texto p { font-size: 12px; line-height: 1.5; color: #444; }
+.upsell__texto em { font-style: normal; font-weight: 700; color: var(--rosa-oscuro); }
+.upsell__boton { margin-top: 10px; width: 100%; padding: 11px; background: var(--negro); color: var(--blanco); border-radius: 4px; font-size: 12px; font-weight: 800; letter-spacing: .1em; }
+.upsell__boton:hover { background: #3e1a2d; }
+.upsell__no { display: block; margin: 6px auto 0; padding: 4px; font-size: 11px; color: var(--gris-texto); text-decoration: underline; }
+
+/* Envío y barra hacia el envío gratis */
+.carrito__envio { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--gris-texto); }
+.carrito__envio[hidden], .aviso-envio[hidden] { display: none; }
+.carrito__envio b { color: #1e7a3c; letter-spacing: .06em; }
+.aviso-envio { margin-bottom: 14px; font-size: 12px; color: #444; }
+.aviso-envio i { display: block; height: 5px; margin-top: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--rosa-oscuro) var(--p), var(--linea) var(--p)); }
+
 
 .toast {
   position: fixed; z-index: 100; left: 50%; bottom: 26px;

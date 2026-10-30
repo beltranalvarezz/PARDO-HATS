@@ -138,6 +138,12 @@ $("#anadir").addEventListener("click", () => {
   abrirCarrito();
 });
 
+/* ---------- Vender la segunda gorra ---------- */
+// Envío: 4,95 € con una gorra y gratis desde 2. Con un solo color en el carrito se ofrece el otro al precio de pack.
+const ENVIO = 4.95, ENVIO_GRATIS_DESDE = 2;
+const FEMENINO = { rosa: "rosa", negro: "negra" };  // "la rosa", "la negra"
+const otroColor = (id) => PRODUCTOS.find((p) => p.id !== id);
+
 /* ---------- Carrito ---------- */
 let carrito = {};
 try { carrito = JSON.parse(localStorage.getItem("pardoht-carrito")) || {}; } catch (e) { carrito = {}; }
@@ -169,19 +175,35 @@ function precioPack(n, normal) {
   return PACKS[4] + (n - 4) * EXTRA_DESDE_4;
 }
 
+// Lo que cuesta añadir una gorra más, con el precio de pack
+function precioDeLaSiguiente(unidades) {
+  const u = PRODUCTOS[0].precio;
+  return Math.round((precioPack(unidades + 1, (unidades + 1) * u) - precioPack(unidades, unidades * u)) * 100) / 100;
+}
+let ofertaRechazada = false;
+try { ofertaRechazada = sessionStorage.getItem("pardoht-oferta-no") === "si"; } catch (e) { /* sin almacenamiento */ }
+
 function pintarCarrito() {
   const ids = Object.keys(carrito).filter(porId);
   const unidades = ids.reduce((s, id) => s + carrito[id], 0);
   const normal = ids.reduce((s, id) => s + carrito[id] * porId(id).precio, 0);
   const total = precioPack(unidades, normal);
   const ahorro = Math.round((normal - total) * 100) / 100;
+  // Envío: 4,95 € con una gorra, gratis desde 2
+  const envio = unidades > 0 && unidades < ENVIO_GRATIS_DESDE ? ENVIO : 0;
+  $("#carritoEnvio").hidden = unidades === 0;
+  $("#carritoEnvio").innerHTML = `<span>Envío</span>${envio ? `<span>${euros(envio)}</span>` : "<b>GRATIS</b>"}`;
+  $("#avisoEnvio").hidden = unidades === 0;
+  $("#avisoEnvio").innerHTML = unidades >= ENVIO_GRATIS_DESDE
+    ? `<span>Envío gratis desbloqueado</span><i style="--p:100%"></i>`
+    : `<span>Añade <b>1 gorra más</b> y el envío te sale <b>gratis</b></span><i style="--p:${100 * unidades / ENVIO_GRATIS_DESDE}%"></i>`;
   const contador = $("#contador");
   contador.textContent = unidades;
   contador.classList.toggle("vacio", unidades === 0);
-  $("#carritoTotal").textContent = euros(total);
+  $("#carritoTotal").textContent = euros(total + envio);
   // Con 2 o más gorras: precio normal tachado, precio del pack y lo que se ahorra
   $("#carritoAntes").hidden = ahorro <= 0;
-  $("#carritoAntes").textContent = euros(normal);
+  $("#carritoAntes").textContent = euros(normal + envio);
   $("#carritoOferta").hidden = ahorro <= 0;
   $("#carritoOferta").textContent = `PACK DE ${unidades} · AHORRAS ${euros(ahorro)}`;
   // Empujón al siguiente pack
@@ -202,7 +224,22 @@ function pintarCarrito() {
       </div>
       <button class="linea__quitar" data-quitar="${id}">Quitar</button>
     </div>`;
-  }).join("") : `<p class="carrito__vacio">Tu carrito está vacío.</p>`;
+  }).join("") + tarjetaOferta(ids, unidades) : `<p class="carrito__vacio">Tu carrito está vacío.</p>`;
+}
+
+// Con un solo color en el carrito, ofrece el otro al precio de pack (un botón; si dice que no, no se insiste)
+function tarjetaOferta(ids, unidades) {
+  if (ids.length !== 1 || ofertaRechazada) return "";
+  const otro = otroColor(ids[0]), extra = precioDeLaSiguiente(unidades), la = FEMENINO[otro.id];
+  return `<div class="upsell">
+    <div class="upsell__img">${vistas[otro.id][0].html.replace(' loading="lazy"', "")}</div>
+    <div class="upsell__texto">
+      <p class="upsell__titulo">¿Y la ${la}?</p>
+      <p>${unidades === 1 ? `Por <b>${euros(extra)}</b> más te llevas las dos` : `Añádela por solo <b>${euros(extra)}</b>`} · <em>Ahorras ${euros(otro.precio - extra)}</em></p>
+      <button type="button" class="upsell__boton" data-upsell="${otro.id}">+ AÑADIR LA ${la.toUpperCase()}</button>
+      <button type="button" class="upsell__no" data-upsell-no>No, gracias</button>
+    </div>
+  </div>`;
 }
 
 $("#carritoLista").addEventListener("click", (e) => {
@@ -211,6 +248,12 @@ $("#carritoLista").addEventListener("click", (e) => {
   if (b.dataset.mas) cambiar(b.dataset.mas, 1);
   if (b.dataset.menos) cambiar(b.dataset.menos, -1);
   if (b.dataset.quitar) cambiar(b.dataset.quitar, -Infinity);
+  if (b.dataset.upsell) anadir(b.dataset.upsell, 1);
+  if (b.hasAttribute("data-upsell-no")) {
+    ofertaRechazada = true;
+    try { sessionStorage.setItem("pardoht-oferta-no", "si"); } catch (e) { /* sin almacenamiento */ }
+    pintarCarrito();
+  }
 });
 
 function abrirCarrito() { $("#carrito").classList.add("abierto"); mostrarCapa(true); }

@@ -382,7 +382,7 @@ body.bloqueado { overflow: hidden; }
 .carrito__vacio { padding: 50px 0; text-align: center; color: var(--gris-texto); font-size: 14px; }
 .linea { display: grid; grid-template-columns: 80px 1fr auto; gap: 14px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--linea); }
 .linea__img { background: var(--blanco); border: 1px solid var(--linea); aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; }
-.linea__img img, .linea__img svg { width: 100%; }
+.linea__img img, .linea__img svg { width: 100%; height: auto; }
 .linea h4 { font-size: 12px; font-weight: 800; margin-bottom: 4px; }
 .linea p { font-size: 12px; color: var(--gris-texto); }
 .linea .cantidad { margin-top: 8px; }
@@ -441,6 +441,25 @@ body.bloqueado { overflow: hidden; }
 }
 .descuento-flotante:hover { transform: scale(1.07); }
 .descuento-flotante[hidden] { display: none; }
+
+/* Carrito: oferta de la otra gorra y envío gratis desde 2 */
+.upsell { display: grid; grid-template-columns: 84px 1fr; gap: 14px; align-items: center; margin: 16px 0 6px; padding: 14px; background: #faf6f8; border: 1.5px solid #ecd7e1; border-radius: 8px; }
+.upsell__img { aspect-ratio: 1; background: var(--blanco); border-radius: 6px; overflow: hidden; }
+.upsell__img img { width: 100%; height: auto; object-fit: contain; }
+.upsell__titulo { font-size: 15px; font-weight: 900; margin-bottom: 2px; }
+.upsell__texto p { font-size: 12px; line-height: 1.5; color: #444; }
+.upsell__texto em { font-style: normal; font-weight: 700; color: var(--rosa-oscuro); }
+.upsell__boton { margin-top: 10px; width: 100%; padding: 11px; background: var(--negro); color: var(--blanco); border-radius: 4px; font-size: 12px; font-weight: 800; letter-spacing: .1em; }
+.upsell__boton:hover { background: #3e1a2d; }
+.upsell__no { display: block; margin: 6px auto 0; padding: 4px; font-size: 11px; color: var(--gris-texto); text-decoration: underline; }
+
+/* Envío y barra hacia el envío gratis */
+.carrito__envio { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--gris-texto); }
+.carrito__envio[hidden], .aviso-envio[hidden] { display: none; }
+.carrito__envio b { color: #1e7a3c; letter-spacing: .06em; }
+.aviso-envio { margin-bottom: 14px; font-size: 12px; color: #444; }
+.aviso-envio i { display: block; height: 5px; margin-top: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--rosa-oscuro) var(--p), var(--linea) var(--p)); }
+
 
 .toast {
   position: fixed; z-index: 100; left: 50%; bottom: 26px;
@@ -620,7 +639,7 @@ body.bloqueado { overflow: hidden; }
         <details>
           <summary>Envíos y devoluciones</summary>
           <ul>
-            <li>Envío en 24/48h a toda España.</li>
+            <li>Envío en 24/48h a toda España: 4,95 €, gratis comprando 2 gorras.</li>
             <li>Devoluciones gratuitas en 14 días.</li>
           </ul>
         </details>
@@ -702,11 +721,13 @@ body.bloqueado { overflow: hidden; }
     <div class="carrito__lista" id="carritoLista"></div>
     <div class="carrito__pie">
       <p class="carrito__oferta" id="carritoOferta" hidden></p>
+      <div class="carrito__envio" id="carritoEnvio" hidden></div>
       <div class="carrito__total">
         <span>TOTAL</span>
         <span class="carrito__precios"><s id="carritoAntes" hidden></s><b id="carritoTotal">0,00 €</b></span>
       </div>
       <p class="carrito__siguiente" id="carritoSiguiente" hidden></p>
+      <p class="aviso-envio" id="avisoEnvio" hidden></p>
       <button class="boton boton--oscuro" id="btnPagar">FINALIZAR COMPRA</button>
     </div>
   </aside>
@@ -896,6 +917,12 @@ $("#anadir").addEventListener("click", () => {
   abrirCarrito();
 });
 
+/* ---------- Vender la segunda gorra ---------- */
+// Envío: 4,95 € con una gorra y gratis desde 2. Con un solo color en el carrito se ofrece el otro al precio de pack.
+const ENVIO = 4.95, ENVIO_GRATIS_DESDE = 2;
+const FEMENINO = { rosa: "rosa", negro: "negra" };  // "la rosa", "la negra"
+const otroColor = (id) => PRODUCTOS.find((p) => p.id !== id);
+
 /* ---------- Carrito ---------- */
 let carrito = {};
 try { carrito = JSON.parse(localStorage.getItem("pardoht-carrito")) || {}; } catch (e) { carrito = {}; }
@@ -927,19 +954,35 @@ function precioPack(n, normal) {
   return PACKS[4] + (n - 4) * EXTRA_DESDE_4;
 }
 
+// Lo que cuesta añadir una gorra más, con el precio de pack
+function precioDeLaSiguiente(unidades) {
+  const u = PRODUCTOS[0].precio;
+  return Math.round((precioPack(unidades + 1, (unidades + 1) * u) - precioPack(unidades, unidades * u)) * 100) / 100;
+}
+let ofertaRechazada = false;
+try { ofertaRechazada = sessionStorage.getItem("pardoht-oferta-no") === "si"; } catch (e) { /* sin almacenamiento */ }
+
 function pintarCarrito() {
   const ids = Object.keys(carrito).filter(porId);
   const unidades = ids.reduce((s, id) => s + carrito[id], 0);
   const normal = ids.reduce((s, id) => s + carrito[id] * porId(id).precio, 0);
   const total = precioPack(unidades, normal);
   const ahorro = Math.round((normal - total) * 100) / 100;
+  // Envío: 4,95 € con una gorra, gratis desde 2
+  const envio = unidades > 0 && unidades < ENVIO_GRATIS_DESDE ? ENVIO : 0;
+  $("#carritoEnvio").hidden = unidades === 0;
+  $("#carritoEnvio").innerHTML = `<span>Envío</span>${envio ? `<span>${euros(envio)}</span>` : "<b>GRATIS</b>"}`;
+  $("#avisoEnvio").hidden = unidades === 0;
+  $("#avisoEnvio").innerHTML = unidades >= ENVIO_GRATIS_DESDE
+    ? `<span>Envío gratis desbloqueado</span><i style="--p:100%"></i>`
+    : `<span>Añade <b>1 gorra más</b> y el envío te sale <b>gratis</b></span><i style="--p:${100 * unidades / ENVIO_GRATIS_DESDE}%"></i>`;
   const contador = $("#contador");
   contador.textContent = unidades;
   contador.classList.toggle("vacio", unidades === 0);
-  $("#carritoTotal").textContent = euros(total);
+  $("#carritoTotal").textContent = euros(total + envio);
   // Con 2 o más gorras: precio normal tachado, precio del pack y lo que se ahorra
   $("#carritoAntes").hidden = ahorro <= 0;
-  $("#carritoAntes").textContent = euros(normal);
+  $("#carritoAntes").textContent = euros(normal + envio);
   $("#carritoOferta").hidden = ahorro <= 0;
   $("#carritoOferta").textContent = `PACK DE ${unidades} · AHORRAS ${euros(ahorro)}`;
   // Empujón al siguiente pack
@@ -960,7 +1003,22 @@ function pintarCarrito() {
       </div>
       <button class="linea__quitar" data-quitar="${id}">Quitar</button>
     </div>`;
-  }).join("") : `<p class="carrito__vacio">Tu carrito está vacío.</p>`;
+  }).join("") + tarjetaOferta(ids, unidades) : `<p class="carrito__vacio">Tu carrito está vacío.</p>`;
+}
+
+// Con un solo color en el carrito, ofrece el otro al precio de pack (un botón; si dice que no, no se insiste)
+function tarjetaOferta(ids, unidades) {
+  if (ids.length !== 1 || ofertaRechazada) return "";
+  const otro = otroColor(ids[0]), extra = precioDeLaSiguiente(unidades), la = FEMENINO[otro.id];
+  return `<div class="upsell">
+    <div class="upsell__img">${vistas[otro.id][0].html.replace(' loading="lazy"', "")}</div>
+    <div class="upsell__texto">
+      <p class="upsell__titulo">¿Y la ${la}?</p>
+      <p>${unidades === 1 ? `Por <b>${euros(extra)}</b> más te llevas las dos` : `Añádela por solo <b>${euros(extra)}</b>`} · <em>Ahorras ${euros(otro.precio - extra)}</em></p>
+      <button type="button" class="upsell__boton" data-upsell="${otro.id}">+ AÑADIR LA ${la.toUpperCase()}</button>
+      <button type="button" class="upsell__no" data-upsell-no>No, gracias</button>
+    </div>
+  </div>`;
 }
 
 $("#carritoLista").addEventListener("click", (e) => {
@@ -969,6 +1027,12 @@ $("#carritoLista").addEventListener("click", (e) => {
   if (b.dataset.mas) cambiar(b.dataset.mas, 1);
   if (b.dataset.menos) cambiar(b.dataset.menos, -1);
   if (b.dataset.quitar) cambiar(b.dataset.quitar, -Infinity);
+  if (b.dataset.upsell) anadir(b.dataset.upsell, 1);
+  if (b.hasAttribute("data-upsell-no")) {
+    ofertaRechazada = true;
+    try { sessionStorage.setItem("pardoht-oferta-no", "si"); } catch (e) { /* sin almacenamiento */ }
+    pintarCarrito();
+  }
 });
 
 function abrirCarrito() { $("#carrito").classList.add("abierto"); mostrarCapa(true); }
