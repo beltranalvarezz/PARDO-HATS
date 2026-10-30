@@ -7,7 +7,10 @@ Web de la marca de gorras PardoHT: intro en 3D que vuela alrededor y dentro de l
 - `estilos.css` — estilos.
 - `script.js` — catálogo (nombre, precio, colores, fotos), galería, carrito y cuenta atrás.
 - `intro3d.js` — gorra 3D (Three.js) y el recorrido de cámara del scroll.
-- `img/` — logo y fotos de producto (`img/fotos/`).
+- `img/` — logo, fotos de producto (`img/fotos/`, en WebP para la web y JPG de respaldo), favicons (`img/favicon/`) e imagen para redes (`og-pardoht.jpg`).
+- `privacidad.html`, `condiciones.html` y `legal.js` — páginas legales (borradores) y su script.
+- `404.html` — página de error propia (GitHub Pages la usa sola).
+- `robots.txt`, `sitemap.xml`, `site.webmanifest`, `favicon.ico` — buscadores, iconos y app.
 
 ## Cambios rápidos
 - Nombre provisional del modelo: `NOMBRE_MODELO` en `script.js`.
@@ -27,6 +30,13 @@ Es una foto fija de la web: después de cambiarla, vuelve a generarla con
 ```bash
 python herramientas/generar-sin-conexion.py
 ```
+
+## Antes de publicar
+- Rellenar los huecos entre [corchetes] de `privacidad.html` y `condiciones.html` (titular, NIF, dirección, email, proveedores, coste de envío) y que los revise un asesor.
+- La dirección supuesta es `https://beltranalvarezz.github.io/PARDO-HATS/` (en `index.html`, `robots.txt`, `sitemap.xml` y las páginas legales). Si hay dominio propio, cambiarla ahí.
+- En GitHub → Settings → Pages: publicar desde `main` y marcar **Enforce HTTPS**.
+- Analítica: poner el dominio de Plausible o el ID de GA4 en `ANALITICA` (`script.js`). Solo se carga si el visitante acepta las cookies.
+- Conectar el formulario de acceso anticipado a un servicio de emails (Brevo, Mailchimp…).
 
 ## Pendiente
 - Conectar el pago (Shopify o Stripe).

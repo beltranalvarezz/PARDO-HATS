@@ -41,8 +41,9 @@ def dato(ruta):
     return f"data:{tipo};base64," + base64.b64encode((P / ruta).read_bytes()).decode()
 
 
-usadas = ["img/logo-blanco.png", "img/logo-negro.png", "img/logo-rosa.png", "img/texturas/pelo-detalle.png"] + \
-         [f"img/fotos/{c}-{n}.jpg" for c in ("rosa", "negro") for n in range(1, 5)]
+usadas = ["img/logo-blanco.png", "img/logo-negro.png", "img/logo-rosa.png", "img/texturas/pelo-detalle.png",
+          "img/favicon/icono-192.png", "img/favicon/apple-touch-icon.png"] + \
+         [f"img/fotos/{c}-{n}.webp" for c in ("rosa", "negro") for n in range(1, 5)]
 imagenes = {r: dato(r) for r in usadas}
 
 # --- Tipografías: solo los alfabetos latinos, incrustadas en base64 ---
@@ -67,8 +68,10 @@ for url, g in grupos.items():
 
 # --- JS: rutas de imágenes y Three.js empaquetado en lugar del CDN ---
 script = leer("script.js")
-script = script.replace('<image href="img/logo-${p.logo}.png"', '<image href="${window.__IMG["img/logo-" + p.logo + ".png"]}"')
-script = script.replace('<img src="img/fotos/${f}.jpg"', '<img src="${window.__IMG["img/fotos/" + f + ".jpg"]}"')
+for a, b in [('<image href="img/logo-${p.logo}.png"', '<image href="${window.__IMG["img/logo-" + p.logo + ".png"]}"'),
+             ('<img src="img/fotos/${f}.webp"', '<img src="${window.__IMG["img/fotos/" + f + ".webp"]}"')]:
+    assert a in script, f"script.js ha cambiado: no encuentro {a}"
+    script = script.replace(a, b)
 
 intro = leer("intro3d.js")
 intro = intro.replace('THREE = await import("three");', "THREE = window.__PARDO.THREE;")
@@ -96,7 +99,9 @@ html = re.sub(r'<script src="script\.js[^"]*"></script>', lambda m:
               "  <script>\n" + seguro(script) + "\n  </script>\n"
               "  <script>\n" + seguro(three) + "\n  </script>", html)
 html = re.sub(r'<script type="module" src="intro3d\.js[^"]*"></script>', lambda m: '<script type="module">\n' + seguro(intro) + "\n  </script>", html)
-html = html.replace("<title>PardoHT — Faith in me</title>", "<title>PardoHT — Faith in me (sin conexión)</title>")
+html = html.replace('href="favicon.ico"', f'href="{imagenes["img/favicon/icono-192.png"]}"')
+html = re.sub(r'\s*<link rel="manifest"[^>]*>', "", html)  # el manifiesto solo sirve con la web publicada
+html = re.sub(r"<title>(.*?)</title>", r"<title>\1 (sin conexión)</title>", html, count=1)
 
 assert "https://cdn.jsdelivr" not in html and "fonts.googleapis" not in html
 salida = P / "pardoht-sin-conexion.html"
