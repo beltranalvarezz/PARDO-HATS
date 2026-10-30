@@ -42,7 +42,7 @@ def dato(ruta):
 
 
 usadas = ["img/logo-blanco.png", "img/logo-negro.png", "img/logo-rosa.png", "img/texturas/pelo-detalle.png",
-          "img/favicon/icono-192.png", "img/favicon/apple-touch-icon.png", "img/bienvenida.webp"] + \
+          "img/favicon/icono-192.png", "img/favicon/apple-touch-icon.png", "img/bienvenida-rosa.webp"] + \
          [f"img/fotos/{c}-{n}.webp" for c in ("rosa", "negro") for n in range(1, 5)]
 imagenes = {r: dato(r) for r in usadas}
 

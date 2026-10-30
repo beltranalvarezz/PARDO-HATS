@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=Dancing+Script:wght@600&family=Pacifico&family=Pinyon+Script&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="estilos.css?v=13">
+  <link rel="stylesheet" href="estilos.css?v=14">
   <script type="importmap">
     { "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -262,40 +262,39 @@
     </div>
   </div>
 
-  <!-- Bienvenida: 10% de descuento a cambio del email -->
+  <!-- Bienvenida: email a cambio del 10% (en inglés, como la de Maktub) -->
   <div class="bienvenida" id="bienvenida" role="dialog" aria-modal="true" aria-labelledby="bienvenidaTitulo" hidden>
     <div class="bienvenida__caja">
-      <button class="icono bienvenida__cerrar" id="cerrarBienvenida" aria-label="Cerrar">
+      <button class="icono bienvenida__cerrar" id="cerrarBienvenida" aria-label="Close">
         <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
       </button>
       <div class="bienvenida__foto">
-        <img src="img/bienvenida.webp" alt="Gorra PardoHT mitad rosa y mitad negra" width="800" height="1000">
+        <img src="img/bienvenida-rosa.webp" alt="Pink PardoHT velvet trucker cap" width="800" height="1000">
       </div>
       <div class="bienvenida__texto">
         <div id="bienvenidaPaso1">
-          <p class="bienvenida__mini">CONSIGUE UN 10% DE DESCUENTO</p>
-          <h2 id="bienvenidaTitulo">Bienvenido a PardoHT</h2>
+          <p class="bienvenida__oferta">GET 10% OFF</p>
+          <h2 id="bienvenidaTitulo">WELCOME TO PARDOHT</h2>
           <form id="formDescuento" novalidate>
-            <input type="email" id="descuentoEmail" placeholder="Tu email" autocomplete="email" aria-label="Email" aria-describedby="descuentoError">
+            <input type="email" id="descuentoEmail" placeholder="Email" autocomplete="email" aria-label="Email" aria-describedby="descuentoError">
             <input type="text" name="web" class="acceso__trampa" tabindex="-1" autocomplete="off" aria-hidden="true">
-            <button type="submit" class="boton boton--claro">CONTINUAR</button>
-            <label class="bienvenida__acepto"><input type="checkbox" id="descuentoAcepto"> <span>Quiero recibir novedades y acepto la <a href="privacidad.html">política de privacidad</a></span></label>
+            <button type="submit" class="bienvenida__boton">Continue</button>
             <p class="bienvenida__error" id="descuentoError" role="alert"></p>
+            <p class="bienvenida__legal">By continuing you agree to receive our emails and to our <a href="privacidad.html">Privacy Policy</a>. Unsubscribe anytime.</p>
           </form>
-          <button type="button" class="bienvenida__no" id="noGracias">No, gracias</button>
         </div>
         <div id="bienvenidaPaso2" hidden>
-          <p class="bienvenida__mini">YA ERES DE LA FAMILIA</p>
-          <h2>Faith in me</h2>
-          <p class="bienvenida__nota">Gracias por apuntarte. Te enviaremos tu 10% de descuento por email y te avisaremos antes que a nadie del próximo drop.</p>
-          <button type="button" class="boton boton--claro bienvenida__seguir" id="seguirViendo">SEGUIR VIENDO</button>
+          <p class="bienvenida__oferta">YOU'RE IN</p>
+          <h2>THANK YOU</h2>
+          <p class="bienvenida__nota">Check your inbox: your 10% off is on its way.</p>
+          <button type="button" class="bienvenida__boton" id="seguirViendo">Continue shopping</button>
         </div>
       </div>
     </div>
   </div>
-  <button type="button" class="descuento-flotante" id="descuentoFlotante" aria-label="Conseguir un 10% de descuento" hidden>-10%</button>
+  <button type="button" class="descuento-flotante" id="descuentoFlotante" aria-label="Get 10% off" hidden>-10%</button>
 
-  <script src="script.js?v=8"></script>
+  <script src="script.js?v=9"></script>
   <script type="module" src="intro3d.js?v=8"></script>
 </body>
 </html>

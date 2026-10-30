@@ -353,7 +353,7 @@ body.bloqueado { overflow: hidden; }
 .carrito__pie { padding: 20px 24px 24px; border-top: 1px solid var(--linea); }
 .carrito__total { display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; letter-spacing: .06em; margin-bottom: 16px; }
 
-/* ----- Bienvenida (10% de descuento) ----- */
+/* ----- Bienvenida (10% de descuento): como la de Maktub, con los colores de la web ----- */
 .bienvenida {
   position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 20px;
   background: rgba(8, 3, 6, .62); backdrop-filter: blur(3px); animation: aparecer .35s ease;
@@ -362,31 +362,30 @@ body.bloqueado { overflow: hidden; }
 @keyframes aparecer { from { opacity: 0; } }
 .bienvenida__caja {
   position: relative; display: grid; grid-template-columns: 1fr 1fr; width: min(780px, 100%);
-  max-height: calc(100vh - 40px); max-height: calc(100svh - 40px); overflow: auto; color: var(--blanco);
-  background: radial-gradient(ellipse at 60% 40%, #3e1a2d 0%, #1a0b13 60%, #0c0609 100%);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, .5); animation: subir .45s cubic-bezier(.2, .8, .2, 1);
+  max-height: calc(100vh - 40px); max-height: calc(100svh - 40px); overflow: auto;
+  background: var(--blanco); color: var(--negro); box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+  animation: subir .45s cubic-bezier(.2, .8, .2, 1);
 }
 @keyframes subir { from { transform: translateY(24px); opacity: 0; } }
-.bienvenida__cerrar { position: absolute; top: 8px; right: 8px; z-index: 2; color: var(--blanco); }
+.bienvenida__cerrar { position: absolute; top: 6px; right: 6px; z-index: 2; color: var(--negro); }
 .bienvenida__foto img { width: 100%; height: 100%; object-fit: cover; }
-.bienvenida__texto { display: flex; flex-direction: column; justify-content: center; padding: 48px 36px; text-align: center; }
-.bienvenida__mini { font-size: 11px; font-weight: 800; letter-spacing: .3em; color: var(--rosa); margin-bottom: 8px; }
-.bienvenida h2 { font-family: var(--caligrafia); font-weight: 400; font-size: clamp(46px, 6vw, 64px); line-height: 1.05; margin-bottom: 24px; }
+.bienvenida__texto { display: flex; flex-direction: column; justify-content: center; padding: 56px 30px; text-align: center; }
+.bienvenida__oferta { font-size: clamp(22px, 2.6vw, 26px); font-weight: 500; letter-spacing: .01em; color: var(--rosa-oscuro); margin-bottom: 10px; }
+.bienvenida h2 { font-size: clamp(38px, 5.2vw, 50px); font-weight: 900; line-height: 1.12; letter-spacing: -.01em; margin-bottom: 26px; }
 #formDescuento input[type="email"] {
-  width: 100%; padding: 15px 14px; margin-bottom: 10px; border-radius: 4px; outline: none;
-  border: 1.5px solid rgba(255, 255, 255, .35); background: rgba(255, 255, 255, .06); color: var(--blanco); font: 500 15px var(--fuente);
+  width: 100%; padding: 15px 16px; margin-bottom: 10px; border-radius: 4px; outline: none;
+  border: 1px solid #6b6b6b; background: var(--blanco); color: var(--negro); font: 400 16px var(--fuente);
 }
-#formDescuento input[type="email"]::placeholder { color: rgba(255, 255, 255, .55); }
-#formDescuento input[type="email"]:focus { border-color: var(--rosa); }
-#formDescuento .boton { width: 100%; border-radius: 4px; }
-.bienvenida__acepto { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; text-align: left; font-size: 11px; line-height: 1.45; color: rgba(255, 255, 255, .72); cursor: pointer; }
-.bienvenida__acepto input { margin-top: 1px; width: 15px; height: 15px; flex-shrink: 0; accent-color: var(--rosa); }
-.bienvenida__acepto a { color: var(--blanco); text-decoration: underline; }
-.bienvenida__error { min-height: 16px; margin-top: 8px; font-size: 12px; font-weight: 700; color: #ffa3b5; }
-.bienvenida__no { margin-top: 6px; padding: 10px; font-size: 11px; letter-spacing: .12em; text-decoration: underline; color: rgba(255, 255, 255, .6); }
-.bienvenida__nota { font-size: 13px; color: rgba(255, 255, 255, .75); }
-.bienvenida__nota { line-height: 1.6; }
-.bienvenida__seguir { width: 100%; margin-top: 26px; border-radius: 4px; }
+#formDescuento input[type="email"]:focus { border-color: var(--rosa-oscuro); box-shadow: 0 0 0 3px rgba(163, 70, 111, .15); }
+.bienvenida__boton {
+  width: 100%; padding: 15px; border-radius: 6px; background: #231f20; color: var(--blanco);
+  font: 800 17px var(--fuente); transition: background .2s;
+}
+.bienvenida__boton:hover { background: #3e1a2d; }
+.bienvenida__error { min-height: 16px; margin-top: 8px; font-size: 13px; font-weight: 700; color: #b3261e; }
+.bienvenida__legal { margin-top: 6px; font-size: 11px; line-height: 1.5; color: var(--gris-texto); }
+.bienvenida__legal a { color: var(--negro); text-decoration: underline; }
+.bienvenida__nota { font-size: 15px; line-height: 1.6; color: var(--gris-texto); margin-bottom: 24px; }
 
 /* Botón flotante "-10%" en el morado de la intro */
 .descuento-flotante {
@@ -431,9 +430,9 @@ body.bloqueado { overflow: hidden; }
   .cabecera__cta { padding: 9px 14px; }
   .bienvenida { padding: 12px; }
   .bienvenida__caja { grid-template-columns: 1fr; }
-  .bienvenida__foto { height: 190px; }
+  .bienvenida__foto { height: 210px; }
   .bienvenida__texto { padding: 26px 20px 22px; }
-  .bienvenida h2 { font-size: 46px; margin-bottom: 18px; }
+  .bienvenida h2 { font-size: 34px; margin-bottom: 18px; }
   .descuento-flotante { width: 56px; height: 56px; font-size: 14px; left: 14px; bottom: 14px; }
   .producto { padding: 50px 16px 70px; }
   .galeria { grid-template-columns: 1fr; }

@@ -308,7 +308,6 @@ function cerrarBienvenida() {
   avisoCookiesSiFalta();
 }
 $("#cerrarBienvenida").addEventListener("click", cerrarBienvenida);
-$("#noGracias").addEventListener("click", cerrarBienvenida);
 $("#bienvenida").addEventListener("click", (e) => { if (e.target === e.currentTarget) cerrarBienvenida(); });
 $("#descuentoFlotante").addEventListener("click", abrirBienvenida);
 
@@ -323,9 +322,8 @@ $("#formDescuento").addEventListener("submit", (e) => {
   };
   // Antispam: campo trampa o envío instantáneo → se le da por bueno sin guardar nada
   if (form.web.value || Date.now() - abiertaEn < 3000) return exito();
-  if (!email) return error("Escribe tu email.");
-  if (!EMAIL_VALIDO.test(email)) return error("Ese email no parece correcto.");
-  if (!$("#descuentoAcepto").checked) return error("Marca la casilla para recibir el descuento.");
+  if (!email) return error("Please enter your email.");
+  if (!EMAIL_VALIDO.test(email)) return error("That email doesn't look right.");
   error("");
   // Aquí se conectará el servicio de emails (Brevo, Mailchimp…), que guarda la lista y envía el 10% por correo
   exito();
