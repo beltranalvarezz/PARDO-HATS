@@ -15,6 +15,7 @@ Web de la marca de gorras PardoHT: intro en 3D que vuela alrededor y dentro de l
 ## Cambios rápidos
 - Nombre provisional del modelo: `NOMBRE_MODELO` en `script.js`.
 - Precio y colores: lista `PRODUCTOS` en `script.js`.
+- Precios por pack (2 = 63,40 €, 3 = 89,70 €, 4 = 113,40 €, cada gorra extra 28,33 €): `PACKS` y `EXTRA_DESDE_4` en `script.js`. Hay que configurar el mismo descuento en la tienda que cobre.
 - Fecha del próximo drop: `FECHA_DROP` en `script.js`.
 - Recorrido de la cámara: lista `RUTA` en `intro3d.js`.
 
