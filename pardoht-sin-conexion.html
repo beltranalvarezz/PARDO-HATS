@@ -983,10 +983,14 @@ function pintarCarrito() {
   const ahorro = unidades >= 2 ? Math.round((normal + ENVIO - total - envio) * 100) / 100 : 0;
   $("#carritoEnvio").hidden = unidades === 0;
   $("#carritoEnvio").innerHTML = `<span>Envío</span>${envio ? `<span>${euros(envio)}</span>` : "<b>GRATIS</b>"}`;
+  // Empujón al siguiente pack: lo que saldría cada gorra con una más
+  const siguiente = unidades + 1;
+  const cadaUna = euros(precioPack(siguiente, siguiente * porId(colorActivo).precio) / siguiente);
+  // Con una gorra, el precio del pack y el envío gratis van en una sola frase, encima de la barra
   $("#avisoEnvio").hidden = unidades === 0;
   $("#avisoEnvio").innerHTML = unidades >= ENVIO_GRATIS_DESDE
     ? `<span>Envío gratis desbloqueado</span><i style="--p:100%"></i>`
-    : `<span>Añade <b>1 gorra más</b> y el envío te sale <b>gratis</b></span><i style="--p:${100 * unidades / ENVIO_GRATIS_DESDE}%"></i>`;
+    : `<span>Añade 1 más: <b>${cadaUna}</b> cada una y envío <b>gratis</b></span><i style="--p:${100 * unidades / ENVIO_GRATIS_DESDE}%"></i>`;
   const contador = $("#contador");
   contador.textContent = unidades;
   contador.classList.toggle("vacio", unidades === 0);
@@ -996,10 +1000,8 @@ function pintarCarrito() {
   $("#carritoAntes").textContent = euros(total + envio + ahorro);
   $("#carritoOferta").hidden = ahorro <= 0;
   $("#carritoOferta").textContent = `PACK DE ${unidades} · AHORRAS ${euros(ahorro)}`;
-  // Empujón al siguiente pack
-  const siguiente = unidades + 1;
-  $("#carritoSiguiente").hidden = unidades < 1 || unidades >= MAX_CARRITO;
-  $("#carritoSiguiente").innerHTML = `Añade 1 más y te sale a <b>${euros(precioPack(siguiente, siguiente * porId(colorActivo).precio) / siguiente)}</b> cada una`;
+  $("#carritoSiguiente").hidden = unidades < ENVIO_GRATIS_DESDE || unidades >= MAX_CARRITO;
+  $("#carritoSiguiente").innerHTML = `Añade 1 más y te sale a <b>${cadaUna}</b> cada una`;
   $("#btnPagar").disabled = unidades === 0;
   $("#carritoLista").innerHTML = ids.length ? ids.map((id) => {
     const p = porId(id);
