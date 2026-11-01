@@ -5723,11 +5723,11 @@ async function iniciar() {
   };
   const relieveLogo = textura(2048, 1024, (x, w, h) => {
     x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
-    x.filter = "blur(5px)"; x.drawImage(siluetaLogo(30, "#0c0c0c"), 0, 0);  // surco ancho: el pelo se abre alrededor
-    x.filter = "none"; x.drawImage(siluetaLogo(9, "#000"), 0, 0);           // letras: sin pelo, solo el hilo
+    x.filter = "blur(4px)"; x.drawImage(siluetaLogo(16, "#0c0c0c"), 0, 0);  // surco: el pelo se abre alrededor
+    x.filter = "none"; x.drawImage(siluetaLogo(2, "#000"), 0, 0);           // letras: sin pelo, solo el hilo, tan finas como el logo
   });
-  // El hilo del logo: misma silueta que las letras del relieve (el parche frontal mide 1024 × 768)
-  const texLogoBordado = texturasBordado(1024, 768, (x) => x.drawImage(imgLogo, 57, 56, 911, 659), 9, true);
+  // El hilo del logo: misma silueta que las letras del relieve (el parche frontal mide 1024 × 768), con el trazo fino del logo
+  const texLogoBordado = texturasBordado(1024, 768, (x) => x.drawImage(imgLogo, 57, 56, 911, 659), 3, true);
 
   /* ---------- Materiales ---------- */
   const blanco = new THREE.Color("#ffffff");
