@@ -29,7 +29,7 @@ subprocess.run("npx esbuild entrada.js --bundle --minify --format=iife --legal-c
 
 # Hoja de estilos de Google Fonts pidiendo formato woff2
 peticion = urllib.request.Request(
-    "https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=Dancing+Script:wght@600&family=Pacifico&family=Pinyon+Script&display=swap",
+    "https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=Dancing+Script:wght@600&family=Pinyon+Script&family=Sacramento&display=swap",
     headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"})
 (B / "fuentes.css").write_bytes(urllib.request.urlopen(peticion).read())
 

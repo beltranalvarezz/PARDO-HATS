@@ -11,7 +11,7 @@ const NOMBRE_MODELO = "GORRA PARDOHT";
 const PRODUCTOS = [
   {
     id: "rosa", nombre: NOMBRE_MODELO, color: "Rosa", precio: 34.99, logo: "blanco",
-    hex: "#c38f86", rejilla: "#f2a9c7", forro: "#f3b4c9", cinta: "#f1a7c3", tinta: "#1a1a1a", hilo: "#fff1f5",
+    hex: "#c38f86", rejilla: "#f2a9c7", forro: "#f3b4c9", cinta: "#f1a7c3", tinta: "#1a1a1a", hilo: "#e6d8c6",
     fotos: ["rosa-1", "rosa-2", "rosa-3", "rosa-4"],
   },
   {

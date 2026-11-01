@@ -124,7 +124,7 @@ async function iniciar() {
 
   // Trucker: frontal alto de pelo (150°) y el resto de rejilla, como la gorra real
   const FRENTE = (150 * Math.PI) / 180;
-  const ALTO = 1.02;
+  const ALTO = 1.07;  // copa de camionero, algo más alta que una gorra normal
   // Deforma la media esfera: laterales más rectos, frontal adelantado y casi vertical, trasera algo más baja.
   // La base (y = 0) y la punta no se mueven, así visera, badana y cierre siguen encajando.
   const forma = (x, y, z) => {
@@ -158,10 +158,10 @@ async function iniciar() {
   const tramoFrente = [Math.PI / 2 - FRENTE / 2, FRENTE];
   const tramoRejilla = [Math.PI / 2 + FRENTE / 2, Math.PI * 2 - FRENTE];
 
-  // Fuentes del bordado "Pardo" y de la cinta interior
+  // Fuentes del bordado "PARDO" y de la cinta interior
   if (document.fonts) {
     await Promise.all([
-      document.fonts.load("140px Pacifico"),
+      document.fonts.load("140px Sacramento", "PARDO"),
       document.fonts.load('600 24px "Dancing Script"'),
     ]).catch(() => {});
   }
@@ -255,20 +255,29 @@ async function iniciar() {
   mapaRejilla.colorSpace = THREE.SRGBColorSpace;
   const alfaRejilla = textura(2048, 512, (x, w, h) => dibujarRejilla(x, w, h, true));
 
-  // Cinta interior: "faith in me" impreso en cada costura (vista desde dentro, por eso en espejo)
+  // Cinta interior: "faith in me" impreso en cada costura (vista desde dentro, por eso en espejo).
+  // El lienzo envuelve una esfera: cerca del botón cada píxel mide menos, así que la cinta (y su letra) se
+  // ensanchan en el lienzo para medir lo mismo en todo el recorrido y juntarse arriba, bajo el remache.
   const texCinta = (fondo, tinta) => {
     const t = textura(2048, 1024, (x, w, h) => {
       const ancho = 40, estira = 2.16;
+      const seno = (y) => Math.max(0.035, Math.sin((y / h) * Math.PI / 2));
+      x.font = '600 24px "Dancing Script", cursive';
+      x.textAlign = "left"; x.textBaseline = "middle";
       for (const grados of [15, 90, 165, 225, 270, 315]) {
         const cx = (grados / 360) * w;
-        x.fillStyle = fondo; x.fillRect(cx - ancho / 2, 0, ancho, h);
-        x.save();
-        x.translate(cx, 0); x.rotate(Math.PI / 2); x.scale(estira, -1);
+        x.fillStyle = fondo;
+        x.beginPath();
+        for (let y = 0; y <= h; y += 4) x.lineTo(cx - ancho / 2 / seno(y), y);
+        for (let y = h; y >= 0; y -= 4) x.lineTo(cx + ancho / 2 / seno(y), y);
+        x.fill();
         x.fillStyle = tinta;
-        x.font = '600 24px "Dancing Script", cursive';
-        x.textAlign = "left"; x.textBaseline = "middle";
-        for (let y = 40; y < h; y += 280) x.fillText("faith in me", y / estira, 0);
-        x.restore();
+        for (let y = 110; y < h - 60; y += 270) {
+          x.save();
+          x.translate(cx, y); x.rotate(Math.PI / 2); x.scale(estira, -1 / seno(y + 110));
+          x.fillText("faith in me", 0, 0);
+          x.restore();
+        }
       }
     });
     t.colorSpace = THREE.SRGBColorSpace;
@@ -287,7 +296,7 @@ async function iniciar() {
     for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) { x.save(); x.translate(Math.cos(a) * grosor, Math.sin(a) * grosor); dibuja(x); x.restore(); }
     dibuja(x);
   };
-  function texturasBordado(w, h, dibuja, grosor) {
+  function texturasBordado(w, h, dibuja, grosor, rizado = false) {
     const fondo = (x) => { x.fillStyle = "#000"; x.fillRect(0, 0, w, h); x.fillStyle = x.strokeStyle = "#fff"; };
     const silueta = textura(w, h, (x) => { fondo(x); engordar(x, dibuja, grosor); });
     const altura = textura(w, h, (x) => { fondo(x); x.filter = `blur(${grosor + 1}px)`; engordar(x, dibuja, grosor); });
@@ -302,7 +311,14 @@ async function iniciar() {
     const puntadas = textura(w, h, (x) => {
       x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
       x.strokeStyle = "rgba(0,0,0,.3)"; x.lineWidth = 1.5;
-      for (let k = -h; k < w; k += 5) linea(x, k, h, k + h, 0);  // hilos en diagonal, como un satinado
+      if (rizado) {
+        // Hilo rizado: filas de bucles pequeños que se montan unos sobre otros
+        for (let y = 0; y < h + 6; y += 5) for (let k = (y / 5) % 2 * 3; k < w; k += 6) {
+          x.beginPath(); x.arc(k, y, 3.2, 0, Math.PI * 1.6); x.stroke();
+        }
+      } else {
+        for (let k = -h; k < w; k += 5) linea(x, k, h, k + h, 0);  // hilos en diagonal, como un satinado
+      }
       grano(x, w, h);
       x.globalCompositeOperation = "multiply";
       x.filter = "brightness(0.55)";
@@ -319,26 +335,43 @@ async function iniciar() {
     anisotropy: 0.8, anisotropyRotation: Math.PI / 4,  // brillo alargado del hilo satinado
   });
 
-  // "Pardo" en la rejilla del lateral izquierdo: letra script con borde, como en la gorra real
-  const texPardo = texturasBordado(1024, 512, (x) => {
-    x.font = '200px Pacifico, "Brush Script MT", cursive';
-    const tam = 200 * 900 / x.measureText("Pardo").width;
-    x.font = `${tam}px Pacifico, "Brush Script MT", cursive`;
+  // "PARDO" en la rejilla del lateral derecho, como en la gorra real: mayúsculas manuscritas de un solo trazo
+  // (P, R y D con lazo, O redonda), bordadas con un hilo grueso, separadas y siguiendo el borde de abajo.
+  // El parche cubre 60° × 36° de copa: en el lienzo (2048 × 1024) un grado de vuelta ocupa 1,28 veces uno de altura.
+  const texPardo = texturasBordado(2048, 1024, (x) => {
+    x.save();
+    x.translate(1150, 720); x.scale(1.28, 1); x.rotate(-0.12);
+    // Tamaño de letra para que la palabra mida 1350 px (1730 en el lienzo); el hilo, en proporción
+    const fuente = (tam) => { x.font = `${tam}px Sacramento, "Brush Script MT", cursive`; x.letterSpacing = `${tam * 0.12}px`; };
+    fuente(200);
+    const tam = 200 * 1350 / x.measureText("PARDO").width;
+    fuente(tam);
     x.textAlign = "center"; x.textBaseline = "middle";
-    x.lineWidth = 8; x.lineJoin = "round";
-    x.fillText("Pardo", 512, 256); x.strokeText("Pardo", 512, 256);
-  }, 3);
+    x.lineWidth = tam * 0.065; x.lineJoin = x.lineCap = "round";
+    x.fillText("PARDO", 0, 0); x.strokeText("PARDO", 0, 0);
+    x.restore();
+  }, 2);
 
-  // Logo frontal: el monograma, con el trazo engordado para que sea un hilo con cuerpo
-  const LOGO = { x: 57, y: 56, w: 911, h: 659 };  // dentro del parche frontal (1024 × 768)
-  const texLogoBordado = texturasBordado(1024, 768, (x) => x.drawImage(imgLogo, LOGO.x, LOGO.y, LOGO.w, LOGO.h), 5);
-
-  // Máscara del pelo: alrededor del logo el pelo queda aplastado por el bordado
-  const mascaraLogo = textura(1024, 512, (x, w, h) => {
-    x.fillStyle = "#000"; x.fillRect(0, 0, w, h);
-    x.filter = "blur(10px)";
-    engordar(x, (c) => c.drawImage(imgLogo, 512 - 170, 205, 340, 200), 7);
+  // Logo hundido y bordado: el monograma está prensado en el pelo y bordado en el fondo. Alrededor de las letras,
+  // un surco donde el pelo se abre casi hasta la base; en las letras no queda pelo, solo el hilo. Blanco = pelo entero.
+  const siluetaLogo = (grosor, color) => {
+    const c = document.createElement("canvas");
+    c.width = 2048; c.height = 1024;
+    const x = c.getContext("2d");
+    const logo = (dx, dy) => x.drawImage(imgLogo, 684 + dx, 410 + dy, 680, 400);
+    for (let d = 2; d <= grosor; d += 2) for (let a = 0; a < Math.PI * 2; a += Math.PI / 12) logo(Math.cos(a) * d, Math.sin(a) * d);
+    logo(0, 0);
+    x.globalCompositeOperation = "source-in";
+    x.fillStyle = color; x.fillRect(0, 0, 2048, 1024);
+    return c;
+  };
+  const relieveLogo = textura(2048, 1024, (x, w, h) => {
+    x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
+    x.filter = "blur(5px)"; x.drawImage(siluetaLogo(30, "#0c0c0c"), 0, 0);  // surco ancho: el pelo se abre alrededor
+    x.filter = "none"; x.drawImage(siluetaLogo(9, "#000"), 0, 0);           // letras: sin pelo, solo el hilo
   });
+  // El hilo del logo: misma silueta que las letras del relieve (el parche frontal mide 1024 × 768)
+  const texLogoBordado = texturasBordado(1024, 768, (x) => x.drawImage(imgLogo, 57, 56, 911, 659), 9, true);
 
   /* ---------- Materiales ---------- */
   const blanco = new THREE.Color("#ffffff");
@@ -352,8 +385,8 @@ async function iniciar() {
   const rejillaInterior = rejilla.clone();
   const telaVisera = new THREE.MeshStandardMaterial({ roughness: 1, side: THREE.DoubleSide });
   const plastico = new THREE.MeshStandardMaterial({ roughness: 0.35 });
-  const bordadoPardo = materialBordado(texPardo, 0.04);
-  const bordadoLogo = materialBordado(texLogoBordado, 0.03);
+  const bordadoPardo = materialBordado(texPardo, 0.012);
+  const bordadoLogo = materialBordado(texLogoBordado, 0.012);
   const cinta = new THREE.MeshStandardMaterial({ transparent: true, alphaTest: 0.5, side: THREE.BackSide, roughness: 0.7 });
   const texBadana = textura(1024, 64, (x, w, h) => {
     x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
@@ -380,21 +413,47 @@ async function iniciar() {
     map: texDetalle, alphaMap: texPelo, alphaTest: 0.05 + 0.88 * f,
     roughness: 1, sheen: f, sheenRoughness: 0.38, envMapIntensity: 0.35,
   });
-  // En el frontal, las capas altas desaparecen donde está el logo: el pelo queda aplastado alrededor
-  const conMascara = (m, f) => {
+  // Mechones: hacia dónde se tuerce cada zona de pelo (dos ruidos suaves en rojo y verde)
+  const torcido = ruidoSuave(16), torcido2 = ruidoSuave(16);
+  const mapaFlujo = textura(256, 256, (x, w, h) => {
+    const img = x.createImageData(w, h);
+    for (let j = 0, k = 0; j < h; j++) for (let i = 0; i < w; i++, k += 4) {
+      img.data[k] = 255 * torcido((i / w) * 16, (j / h) * 16);
+      img.data[k + 1] = 255 * torcido2((i / w) * 16, (j / h) * 16);
+      img.data[k + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+  });
+  mapaFlujo.wrapS = mapaFlujo.wrapT = THREE.RepeatWrapping;
+
+  // Cada capa desplaza un poco las hebras: cuanto más alta, más se inclinan (peinadas hacia "peinado") y más
+  // se tuercen según su mechón. En el frontal, además, el logo está grabado: el pelo no pasa de la altura
+  // que marca relieveLogo y en el fondo del surco queda en sombra.
+  const peinar = (m, f, peinado, conLogo) => {
     m.onBeforeCompile = (sh) => {
-      sh.uniforms.mascaraLogo = { value: mascaraLogo };
-      sh.uniforms.alturaCapa = { value: f };
-      sh.vertexShader = "varying vec2 vUvMascara;\n" + sh.vertexShader.replace("#include <uv_vertex>", "#include <uv_vertex>\n  vUvMascara = uv;");
-      sh.fragmentShader = "uniform sampler2D mascaraLogo;\nuniform float alturaCapa;\nvarying vec2 vUvMascara;\n" +
-        sh.fragmentShader.replace("#include <alphatest_fragment>",
-          "  if (alturaCapa > 1.0 - 0.8 * texture2D(mascaraLogo, vUvMascara).r) diffuseColor.a = 0.0;\n#include <alphatest_fragment>");
+      Object.assign(sh.uniforms, {
+        alturaCapa: { value: f }, peinado: { value: new THREE.Vector2(...peinado) },
+        mapaFlujo: { value: mapaFlujo }, relieveLogo: { value: relieveLogo },
+      });
+      sh.vertexShader = "varying vec2 vUvPelo;\n" + sh.vertexShader.replace("#include <uv_vertex>", "#include <uv_vertex>\n  vUvPelo = uv;");
+      sh.fragmentShader = "uniform float alturaCapa;\nuniform vec2 peinado;\nuniform sampler2D mapaFlujo, relieveLogo;\nvarying vec2 vUvPelo;\n" +
+        sh.fragmentShader
+          .replace("#include <alphamap_fragment>", `
+  vec2 mechon = texture2D(mapaFlujo, vUvPelo * vec2(6.0, 3.0)).rg - 0.5;
+  diffuseColor.a *= texture2D(alphaMap, vAlphaMapUv + alturaCapa * alturaCapa * (peinado + mechon * 1.6) * 0.03).g;`)
+          .replace("#include <alphatest_fragment>", conLogo ? `
+  // Cada capa cae un poco (position.y): el hueco se busca algo más abajo para que coincida con el bordado
+  float relieve = texture2D(relieveLogo, vUvPelo - vec2(0.0, 0.026 * alturaCapa * alturaCapa)).r;
+  if (alturaCapa > relieve) diffuseColor.a = 0.0;
+  diffuseColor.rgb *= 0.5 + 0.5 * smoothstep(0.05, 0.75, relieve);
+#include <alphatest_fragment>` : "#include <alphatest_fragment>");
     };
-    m.customProgramCacheKey = () => "pelo-con-mascara";
+    m.customProgramCacheKey = () => (conLogo ? "pelo-frente" : "pelo-visera");
     return m;
   };
-  const pelos = Array.from({ length: CAPAS }, (_, k) => { const f = (k + 1) / CAPAS; return { f, m: conMascara(materialPelo(f), f) }; });
-  const pelosVisera = pelos.map(({ f }) => ({ f, m: materialPelo(f) }));
+  // En el frontal el pelo cae hacia abajo (v baja); en la visera, hacia la punta (v sube)
+  const pelos = Array.from({ length: CAPAS }, (_, k) => { const f = (k + 1) / CAPAS; return { f, m: peinar(materialPelo(f), f, [0.15, 1], true) }; });
+  const pelosVisera = pelos.map(({ f }) => ({ f, m: peinar(materialPelo(f), f, [0, -1], false) }));
 
   function pintar(p) {
     const pelo = new THREE.Color(p.hex);
@@ -404,10 +463,14 @@ async function iniciar() {
       m.color.copy(pelo).multiplyScalar(0.38 + 0.72 * f);  // raíz oscura, puntas con luz
       m.sheenColor.copy(pelo).lerp(blanco, 0.45);
     }
-    // Logo bordado tono sobre tono: el hilo brilla algo más que el pelo, como en la gorra real
-    bordadoLogo.color.copy(pelo).multiplyScalar(p.id === "negro" ? 1.6 : 0.95).lerp(blanco, 0.04);
-    bordadoLogo.sheenColor.copy(bordadoLogo.color).lerp(blanco, 0.3);
     bordadoPardo.sheenColor.set(p.hilo);
+    // Logo bordado en el tono de la gorra; en la negra, un hilo negro con brillo para que se lea
+    const negra = p.id === "negro";
+    bordadoLogo.color.copy(negra ? new THREE.Color("#2c2c31") : pelo.clone().multiplyScalar(0.98));
+    bordadoLogo.sheenColor.copy(negra ? new THREE.Color("#8e8e98") : bordadoLogo.color.clone().lerp(blanco, 0.35));
+    bordadoLogo.sheen = negra ? 1 : 0.45;
+    bordadoLogo.roughness = negra ? 0.42 : 0.5;
+    bordadoLogo.specularIntensity = negra ? 0.8 : 0.6;
     rejilla.color.set(p.rejilla);
     rejillaInterior.color.set(p.rejilla).multiplyScalar(0.6);
     plastico.color.set(p.rejilla).multiplyScalar(0.9);
@@ -420,6 +483,7 @@ async function iniciar() {
 
   /* ---------- Modelo de la gorra ---------- */
   const gorra = new THREE.Group();
+  gorra.scale.x = 0.97;  // de lado a lado, apenas más estrecha que una gorra normal
 
   const sombra = (m) => { m.castShadow = true; m.receiveShadow = true; return m; };
   const capasPelo = [];  // para mover el pelo un poco en cada fotograma
@@ -431,8 +495,9 @@ async function iniciar() {
     new THREE.Mesh(geoFrente, forro),
     sombra(new THREE.Mesh(casco(1, ...tramoRejilla), rejilla)),
     new THREE.Mesh(casco(0.986, ...tramoRejilla), rejillaInterior),
-    sombra(new THREE.Mesh(parche(1.006, 348, 46, 65, 27), bordadoPardo)),
-    sombra(new THREE.Mesh(parche(1 + LARGO_PELO * 0.45, 90, 56, 53.5, 41), bordadoLogo)),
+    sombra(new THREE.Mesh(parche(1.006, 344, 60, 70, 36), bordadoPardo)),
+    // El bordado, pegado al fondo del hueco: si quedara más alto, desde arriba se vería el hueco asomando debajo
+    Object.assign(new THREE.Mesh(parche(1.003, 90, 56, 53.5, 41), bordadoLogo), { receiveShadow: true }),
     new THREE.Mesh(casco(0.994, 0, Math.PI * 2), cinta),
   );
   for (const { f, m } of pelos) {
@@ -442,12 +507,22 @@ async function iniciar() {
     copa.add(capa);
     capasPelo.push({ capa, f });
   }
+  // Botón de arriba, forrado del mismo terciopelo: media esfera apoyada en la copa, sin asomar por dentro
   for (let k = 0; k < 8; k++) {
-    const boton = new THREE.Mesh(new THREE.SphereGeometry(0.07 + 0.008 * k, 24, 12), pelosVisera[Math.min(CAPAS - 1, k * 4)].m);
-    boton.position.y = 1.02;
-    boton.scale.y = 0.7;
+    const boton = new THREE.Mesh(new THREE.SphereGeometry(0.07 + 0.008 * k, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+      pelosVisera[Math.min(CAPAS - 1, k * 4)].m);
+    boton.position.y = 0.995;
+    boton.scale.y = 0.8;
     copa.add(boton);
   }
+  // Por dentro, donde se juntan las cintas: el remache metálico que sujeta el botón (cabeza abombada y arandela)
+  const metal = new THREE.MeshStandardMaterial({ color: 0xe4e4ea, metalness: 0.7, roughness: 0.35, envMapIntensity: 1.6 });
+  const arandela = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.044, 0.006, 32), metal);
+  arandela.position.y = 0.989;
+  const cabeza = new THREE.Mesh(new THREE.SphereGeometry(0.03, 32, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), metal);
+  cabeza.position.y = 0.987;
+  cabeza.scale.y = 0.5;
+  copa.add(arandela, cabeza);
   gorra.add(copa);
 
   // Badana: la cinta interior del contorno
@@ -547,7 +622,7 @@ async function iniciar() {
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const anclas = {
     logo:    { pos: enCopa(90, 52, 1 + LARGO_PELO), normal: V(0, 0.5, 0.87).normalize() },
-    rejilla: { pos: enCopa(-12, 64),        normal: V(-0.85, 0.5, 0.15).normalize() },
+    rejilla: { pos: enCopa(-8, 72),         normal: V(-0.9, 0.3, 0.2).normalize() },
     cierre:  { pos: V(-0.03, 0.09, -1.1), normal: V(0, 0, -1) },
     dentro:  { pos: enCopa(90, 40, 0.99),   normal: V(0, -0.7, -0.7).normalize() },
     visera:  { pos: V(...puntoVisera(0.25, 0.75, LARGO_PELO * 0.75)), normal: V(0, 1, 0.15).normalize() },
